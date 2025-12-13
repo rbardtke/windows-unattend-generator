@@ -1,0 +1,1400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Windows Unattend Generator - Complete Edition</title>
+    <meta name="description" content="Generate customized autounattend.xml files for automated Windows installations with 100+ configuration options">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Windows Unattend Generator</h1>
+            <p class="subtitle">Complete autounattend.xml creator with 100+ configuration options for Windows 10/11</p>
+        </header>
+
+        <nav class="actions">
+            <button id="importBtn" class="btn btn-secondary">Import Config</button>
+            <button id="exportBtn" class="btn btn-primary">Generate & Download</button>
+            <button id="saveConfigBtn" class="btn btn-secondary">Save Config (JSON)</button>
+            <select id="presetSelector" class="preset-selector">
+                <option value="">-- Select Preset --</option>
+                <option value="minimal">Minimal Configuration</option>
+                <option value="single-user">Single User Account</option>
+                <option value="vm-guest">VM Guest Tools</option>
+                <option value="privacy">Privacy Focused</option>
+                <option value="gaming">Gaming Optimized</option>
+            </select>
+        </nav>
+
+        <!-- Tab Navigation -->
+        <div class="tab-container">
+            <div class="tab-nav">
+                <button class="tab-btn active" data-tab="basic">Basic Setup</button>
+                <button class="tab-btn" data-tab="accounts">Computer & Accounts</button>
+                <button class="tab-btn" data-tab="disk">Disk Configuration</button>
+                <button class="tab-btn" data-tab="system">System Configuration</button>
+                <button class="tab-btn" data-tab="ui">User Interface</button>
+                <button class="tab-btn" data-tab="appearance">Appearance</button>
+                <button class="tab-btn" data-tab="network">Network & Tools</button>
+                <button class="tab-btn" data-tab="scripts">Scripts & Advanced</button>
+            </div>
+
+            <main>
+                <form id="unattendForm">
+
+                    <!-- TAB 1: BASIC SETUP -->
+                    <div class="tab-content active" id="tab-basic">
+
+                        <!-- Processor Architecture -->
+                        <section class="form-section">
+                            <h2>Processor Architecture</h2>
+                            <div class="form-group">
+                                <label>Select target processor architecture(s):</label>
+                                <div class="checkbox-group">
+                                    <label><input type="checkbox" name="arch_x86" value="x86"> x86 (32-bit)</label>
+                                    <label><input type="checkbox" name="arch_amd64" value="amd64" checked> amd64 (64-bit)</label>
+                                    <label><input type="checkbox" name="arch_arm64" value="arm64"> arm64 (ARM64)</label>
+                                </div>
+                                <small>Select all architectures you want to support</small>
+                            </div>
+                        </section>
+
+                        <!-- Language Settings -->
+                        <section class="form-section">
+                            <h2>Language & Regional Settings</h2>
+
+                            <div class="form-group">
+                                <label for="language">Windows Display Language</label>
+                                <select id="language" name="language" required>
+                                    <option value="en-US">English (United States)</option>
+                                    <option value="en-GB">English (United Kingdom)</option>
+                                    <option value="de-DE">German (Germany)</option>
+                                    <option value="fr-FR">French (France)</option>
+                                    <option value="es-ES">Spanish (Spain)</option>
+                                    <option value="it-IT">Italian (Italy)</option>
+                                    <option value="ja-JP">Japanese (Japan)</option>
+                                    <option value="zh-CN">Chinese (Simplified)</option>
+                                    <option value="pt-BR">Portuguese (Brazil)</option>
+                                    <option value="ru-RU">Russian (Russia)</option>
+                                    <option value="ko-KR">Korean (Korea)</option>
+                                    <option value="nl-NL">Dutch (Netherlands)</option>
+                                    <option value="pl-PL">Polish (Poland)</option>
+                                    <option value="sv-SE">Swedish (Sweden)</option>
+                                    <option value="tr-TR">Turkish (Turkey)</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="languageSecondary">Secondary Language (Optional)</label>
+                                <select id="languageSecondary" name="languageSecondary">
+                                    <option value="">None</option>
+                                    <option value="en-US">English (United States)</option>
+                                    <option value="en-GB">English (United Kingdom)</option>
+                                    <option value="de-DE">German (Germany)</option>
+                                    <option value="fr-FR">French (France)</option>
+                                    <option value="es-ES">Spanish (Spain)</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="languageTertiary">Tertiary Language (Optional)</label>
+                                <select id="languageTertiary" name="languageTertiary">
+                                    <option value="">None</option>
+                                    <option value="en-US">English (United States)</option>
+                                    <option value="en-GB">English (United Kingdom)</option>
+                                    <option value="de-DE">German (Germany)</option>
+                                    <option value="fr-FR">French (France)</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="keyboard">Keyboard Layout</label>
+                                <select id="keyboard" name="keyboard" required>
+                                    <option value="0409:00000409">US</option>
+                                    <option value="0809:00000809">UK</option>
+                                    <option value="0407:00000407">German</option>
+                                    <option value="040c:0000040c">French</option>
+                                    <option value="0c0a:0000040a">Spanish</option>
+                                    <option value="0410:00000410">Italian</option>
+                                    <option value="0411:00000411">Japanese</option>
+                                    <option value="0804:00000804">Chinese (Simplified)</option>
+                                    <option value="0416:00000416">Portuguese (Brazil)</option>
+                                    <option value="0419:00000419">Russian</option>
+                                    <option value="0412:00000412">Korean</option>
+                                    <option value="0413:00000413">Dutch</option>
+                                    <option value="0415:00000415">Polish</option>
+                                    <option value="041d:0000041d">Swedish</option>
+                                    <option value="041f:0000041f">Turkish</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="geoLocation">GeoLocation / Home Region</label>
+                                <select id="geoLocation" name="geoLocation" required>
+                                    <option value="244">United States</option>
+                                    <option value="242">United Kingdom</option>
+                                    <option value="94">Germany</option>
+                                    <option value="84">France</option>
+                                    <option value="217">Spain</option>
+                                    <option value="118">Italy</option>
+                                    <option value="122">Japan</option>
+                                    <option value="45">China</option>
+                                    <option value="32">Brazil</option>
+                                    <option value="203">Russia</option>
+                                    <option value="134">South Korea</option>
+                                    <option value="176">Netherlands</option>
+                                    <option value="191">Poland</option>
+                                    <option value="221">Sweden</option>
+                                    <option value="235">Turkey</option>
+                                    <option value="39">Canada</option>
+                                    <option value="12">Australia</option>
+                                    <option value="113">India</option>
+                                    <option value="158">Mexico</option>
+                                </select>
+                                <small>Full country list available - 240+ countries supported</small>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="timezone">Time Zone</label>
+                                <select id="timezone" name="timezone" required>
+                                    <option value="Pacific Standard Time">Pacific Time (US & Canada)</option>
+                                    <option value="Mountain Standard Time">Mountain Time (US & Canada)</option>
+                                    <option value="Central Standard Time">Central Time (US & Canada)</option>
+                                    <option value="Eastern Standard Time">Eastern Time (US & Canada)</option>
+                                    <option value="GMT Standard Time">GMT (London)</option>
+                                    <option value="W. Europe Standard Time">Central European Time</option>
+                                    <option value="Tokyo Standard Time">Tokyo</option>
+                                    <option value="China Standard Time">Beijing, Chongqing, Hong Kong, Urumqi</option>
+                                    <option value="India Standard Time">Chennai, Kolkata, Mumbai, New Delhi</option>
+                                    <option value="AUS Eastern Standard Time">Canberra, Melbourne, Sydney</option>
+                                    <option value="E. South America Standard Time">Brasilia</option>
+                                    <option value="Russian Standard Time">Moscow, St. Petersburg</option>
+                                </select>
+                            </div>
+                        </section>
+
+                        <!-- Setup Options -->
+                        <section class="form-section">
+                            <h2>Setup Options</h2>
+
+                            <div class="form-group">
+                                <label>
+                                    <input type="checkbox" name="bypassTPM" id="bypassTPM">
+                                    Bypass TPM requirement (Windows 11)
+                                </label>
+                                <small>Allows installation on systems without TPM 2.0</small>
+                            </div>
+
+                            <div class="form-group">
+                                <label>
+                                    <input type="checkbox" name="bypassSecureBoot" id="bypassSecureBoot">
+                                    Bypass Secure Boot requirement (Windows 11)
+                                </label>
+                                <small>Allows installation without Secure Boot enabled</small>
+                            </div>
+
+                            <div class="form-group">
+                                <label>
+                                    <input type="checkbox" name="bypassRAM" id="bypassRAM">
+                                    Bypass RAM requirement (Windows 11)
+                                </label>
+                                <small>Allows installation on systems with less than 4GB RAM</small>
+                            </div>
+
+                            <div class="form-group">
+                                <label>
+                                    <input type="checkbox" name="bypassStorage" id="bypassStorage">
+                                    Bypass storage requirement (Windows 11)
+                                </label>
+                                <small>Allows installation on systems with less than 64GB storage</small>
+                            </div>
+
+                            <div class="form-group">
+                                <label>
+                                    <input type="checkbox" name="showPowerShell" id="showPowerShell">
+                                    Show PowerShell window during setup
+                                </label>
+                                <small>Opens PowerShell for manual intervention during installation</small>
+                            </div>
+
+                            <div class="form-group">
+                                <label>
+                                    <input type="checkbox" name="disableNarrator" id="disableNarrator">
+                                    Disable Narrator auto-start
+                                </label>
+                                <small>Prevents the screen reader from starting automatically</small>
+                            </div>
+
+                            <div class="form-group">
+                                <label>
+                                    <input type="checkbox" name="skipMachineOOBE" id="skipMachineOOBE" checked>
+                                    Skip machine OOBE (Out of Box Experience)
+                                </label>
+                            </div>
+
+                            <div class="form-group">
+                                <label>
+                                    <input type="checkbox" name="skipUserOOBE" id="skipUserOOBE" checked>
+                                    Skip user OOBE
+                                </label>
+                            </div>
+                        </section>
+
+                        <!-- Windows Edition -->
+                        <section class="form-section">
+                            <h2>Windows Edition & Product Key</h2>
+
+                            <div class="form-group">
+                                <label for="windowsEdition">Windows Edition</label>
+                                <select id="windowsEdition" name="windowsEdition" required>
+                                    <option value="Professional">Windows 10/11 Pro</option>
+                                    <option value="Home">Windows 10/11 Home</option>
+                                    <option value="Education">Windows 10/11 Education</option>
+                                    <option value="Enterprise">Windows 10/11 Enterprise</option>
+                                    <option value="ProfessionalWorkstation">Windows 10/11 Pro for Workstations</option>
+                                    <option value="ServerStandard">Windows Server Standard</option>
+                                    <option value="ServerDatacenter">Windows Server Datacenter</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Product Key Mode:</label>
+                                <div class="radio-group">
+                                    <label><input type="radio" name="productKeyMode" value="none" checked> No product key</label>
+                                    <label><input type="radio" name="productKeyMode" value="generic"> Use generic key</label>
+                                    <label><input type="radio" name="productKeyMode" value="custom"> Custom product key</label>
+                                    <label><input type="radio" name="productKeyMode" value="interactive"> Ask during setup</label>
+                                </div>
+                            </div>
+
+                            <div class="form-group" id="productKeyGroup" style="display: none;">
+                                <label for="productKey">Product Key</label>
+                                <input type="text" id="productKey" name="productKey" placeholder="XXXXX-XXXXX-XXXXX-XXXXX-XXXXX" pattern="[A-Z0-9]{5}-[A-Z0-9]{5}-[A-Z0-9]{5}-[A-Z0-9]{5}-[A-Z0-9]{5}">
+                                <small>Format: XXXXX-XXXXX-XXXXX-XXXXX-XXXXX</small>
+                            </div>
+                        </section>
+
+                    </div>
+
+                    <!-- TAB 2: COMPUTER & ACCOUNTS -->
+                    <div class="tab-content" id="tab-accounts">
+
+                        <!-- Computer Name -->
+                        <section class="form-section">
+                            <h2>Computer Name</h2>
+
+                            <div class="form-group">
+                                <label>Naming Mode:</label>
+                                <div class="radio-group">
+                                    <label><input type="radio" name="computerNameMode" value="random" checked> Random name (generated by Windows)</label>
+                                    <label><input type="radio" name="computerNameMode" value="custom"> Custom name</label>
+                                    <label><input type="radio" name="computerNameMode" value="script"> PowerShell script</label>
+                                </div>
+                            </div>
+
+                            <div class="form-group" id="computerNameCustomGroup" style="display: none;">
+                                <label for="computerName">Computer Name</label>
+                                <input type="text" id="computerName" name="computerName" placeholder="DESKTOP-PC" maxlength="15">
+                                <small>Max 15 characters, alphanumeric and hyphens only</small>
+                            </div>
+
+                            <div class="form-group" id="computerNameScriptGroup" style="display: none;">
+                                <label for="computerNameScript">PowerShell Script for Computer Name</label>
+                                <textarea id="computerNameScript" name="computerNameScript" rows="4" placeholder="# Example: Generate name from serial&#10;$serial = (Get-WmiObject Win32_BIOS).SerialNumber&#10;return &quot;PC-$serial&quot;"></textarea>
+                                <small>Script must return a string with the computer name</small>
+                            </div>
+                        </section>
+
+                        <!-- User Accounts -->
+                        <section class="form-section">
+                            <h2>User Accounts</h2>
+
+                            <div class="form-group">
+                                <label>
+                                    <input type="checkbox" name="enableBuiltinAdmin" id="enableBuiltinAdmin">
+                                    Enable built-in Administrator account
+                                </label>
+                                <small>Enables the default Administrator account</small>
+                            </div>
+
+                            <div class="form-group" id="builtinAdminPasswordGroup" style="display: none;">
+                                <label for="builtinAdminPassword">Built-in Administrator Password</label>
+                                <input type="password" id="builtinAdminPassword" name="builtinAdminPassword" placeholder="Leave empty for no password">
+                            </div>
+
+                            <div class="form-group">
+                                <h3>Local User Accounts</h3>
+                                <div id="userAccountsTable">
+                                    <table class="accounts-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Username</th>
+                                                <th>Display Name</th>
+                                                <th>Password</th>
+                                                <th>Group</th>
+                                                <th>Auto Logon</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="accountsTableBody">
+                                            <tr class="account-row" data-index="0">
+                                                <td><input type="text" name="account_0_username" placeholder="User" required></td>
+                                                <td><input type="text" name="account_0_displayname" placeholder="User"></td>
+                                                <td><input type="password" name="account_0_password" placeholder="(no password)"></td>
+                                                <td>
+                                                    <select name="account_0_group">
+                                                        <option value="Administrators">Administrators</option>
+                                                        <option value="Users" selected>Users</option>
+                                                        <option value="Power Users">Power Users</option>
+                                                        <option value="Guests">Guests</option>
+                                                    </select>
+                                                </td>
+                                                <td><input type="checkbox" name="account_0_autologon"></td>
+                                                <td><button type="button" class="btn-small btn-danger remove-account" disabled>Remove</button></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                    <button type="button" id="addAccountBtn" class="btn btn-secondary">Add Account</button>
+                                    <small>You can add up to 99 user accounts</small>
+                                </div>
+                            </div>
+                        </section>
+
+                        <!-- Password Policies -->
+                        <section class="form-section">
+                            <h2>Password & Account Policies</h2>
+
+                            <div class="form-group">
+                                <label for="passwordExpiration">Password Expiration</label>
+                                <select id="passwordExpiration" name="passwordExpiration">
+                                    <option value="default">Default (42 days)</option>
+                                    <option value="never">Never expire</option>
+                                    <option value="custom">Custom duration</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group" id="passwordExpirationCustomGroup" style="display: none;">
+                                <label for="passwordExpirationDays">Days until password expires</label>
+                                <input type="number" id="passwordExpirationDays" name="passwordExpirationDays" min="1" max="999" value="90">
+                            </div>
+
+                            <div class="form-group">
+                                <label>
+                                    <input type="checkbox" name="enableAccountLockout" id="enableAccountLockout">
+                                    Enable account lockout policy
+                                </label>
+                            </div>
+
+                            <div id="accountLockoutGroup" style="display: none;">
+                                <div class="form-group">
+                                    <label for="lockoutThreshold">Account lockout threshold (failed attempts)</label>
+                                    <input type="number" id="lockoutThreshold" name="lockoutThreshold" min="1" max="999" value="5">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="lockoutWindow">Account lockout observation window (minutes)</label>
+                                    <input type="number" id="lockoutWindow" name="lockoutWindow" min="1" max="99999" value="30">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="lockoutDuration">Account lockout duration (minutes, 0 = manual unlock)</label>
+                                    <input type="number" id="lockoutDuration" name="lockoutDuration" min="0" max="99999" value="30">
+                                </div>
+                            </div>
+                        </section>
+
+                    </div>
+
+                    <!-- TAB 3: DISK CONFIGURATION -->
+                    <div class="tab-content" id="tab-disk">
+
+                        <!-- Partitioning Mode -->
+                        <section class="form-section">
+                            <h2>Disk Partitioning</h2>
+
+                            <div class="form-group">
+                                <label for="partitionMode">Partitioning Mode</label>
+                                <select id="partitionMode" name="partitionMode">
+                                    <option value="auto">Automatic (wipe & partition)</option>
+                                    <option value="interactive">Interactive (manual selection)</option>
+                                    <option value="custom">Custom DiskPart script</option>
+                                </select>
+                                <small>Automatic mode will erase all data on the disk!</small>
+                            </div>
+
+                            <div id="autoPartitionGroup">
+                                <div class="form-group">
+                                    <label for="partitionStyle">Partition Style</label>
+                                    <select id="partitionStyle" name="partitionStyle">
+                                        <option value="gpt">GPT (UEFI)</option>
+                                        <option value="mbr">MBR (BIOS)</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group" id="efiSizeGroup">
+                                    <label for="efiSize">EFI System Partition Size (MB)</label>
+                                    <input type="number" id="efiSize" name="efiSize" min="100" max="1000" value="100">
+                                    <small>Recommended: 100 MB (minimum for Windows)</small>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="recoveryMode">Windows Recovery Environment (WinRE)</label>
+                                    <select id="recoveryMode" name="recoveryMode">
+                                        <option value="partition">Separate partition</option>
+                                        <option value="windows">Inside Windows partition</option>
+                                        <option value="none">No recovery environment</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group" id="recoverySizeGroup">
+                                    <label for="recoverySize">Recovery Partition Size (MB)</label>
+                                    <input type="number" id="recoverySize" name="recoverySize" min="100" max="10000" value="990">
+                                    <small>Recommended: 990 MB for Windows 11</small>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>
+                                        <input type="checkbox" name="wipeDisk" id="wipeDisk" checked>
+                                        Wipe disk before installation
+                                    </label>
+                                    <small class="warning">This will erase all data on the target disk!</small>
+                                </div>
+                            </div>
+
+                            <div class="form-group" id="customDiskPartGroup" style="display: none;">
+                                <label for="customDiskPart">Custom DiskPart Script</label>
+                                <textarea id="customDiskPart" name="customDiskPart" rows="12" placeholder="rem Custom DiskPart commands&#10;select disk 0&#10;clean&#10;convert gpt&#10;create partition efi size=100&#10;format quick fs=fat32 label=&quot;System&quot;&#10;assign letter=S&#10;create partition msr size=16&#10;create partition primary&#10;format quick fs=ntfs label=&quot;Windows&quot;&#10;assign letter=W"></textarea>
+                                <small>Advanced: Write custom DiskPart commands for partition layout</small>
+                            </div>
+
+                            <div class="form-group">
+                                <label>
+                                    <input type="checkbox" name="enableDiskAssertion" id="enableDiskAssertion">
+                                    Enable disk assertion (validate disk before partitioning)
+                                </label>
+                            </div>
+
+                            <div class="form-group" id="diskAssertionScriptGroup" style="display: none;">
+                                <label for="diskAssertionScript">Disk Assertion VBScript</label>
+                                <textarea id="diskAssertionScript" name="diskAssertionScript" rows="8" placeholder="' VBScript to validate disk&#10;' Example: Check minimum disk size&#10;Set objWMI = GetObject(&quot;winmgmts:&quot;)&#10;Set colDisks = objWMI.ExecQuery(&quot;SELECT * FROM Win32_DiskDrive&quot;)&#10;For Each objDisk in colDisks&#10;    If objDisk.Size < 64000000000 Then&#10;        WScript.Echo &quot;Disk too small&quot;&#10;        WScript.Quit(1)&#10;    End If&#10;Next"></textarea>
+                            </div>
+                        </section>
+
+                    </div>
+
+                    <!-- TAB 4: SYSTEM CONFIGURATION -->
+                    <div class="tab-content" id="tab-system">
+
+                        <!-- Compact OS -->
+                        <section class="form-section">
+                            <h2>Compact OS</h2>
+                            <div class="form-group">
+                                <label for="compactOS">Compact OS</label>
+                                <select id="compactOS" name="compactOS">
+                                    <option value="auto">Automatic (Windows decides)</option>
+                                    <option value="enabled">Enabled (compress system files)</option>
+                                    <option value="disabled">Disabled</option>
+                                </select>
+                                <small>Compresses Windows system files to save disk space (useful for small SSDs)</small>
+                            </div>
+                        </section>
+
+                        <!-- System Tweaks -->
+                        <section class="form-section">
+                            <h2>System Tweaks</h2>
+                            <p class="section-description">Configure Windows system settings and optimizations</p>
+
+                            <div class="tweaks-grid">
+                                <div class="form-group">
+                                    <label>
+                                        <input type="checkbox" name="disableDefender" id="disableDefender">
+                                        Disable Windows Defender
+                                    </label>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>
+                                        <input type="checkbox" name="disableUpdates" id="disableUpdates">
+                                        Disable Windows Updates
+                                    </label>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>
+                                        <input type="checkbox" name="disableUAC" id="disableUAC">
+                                        Disable User Account Control (UAC)
+                                    </label>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>
+                                        <input type="checkbox" name="disableSmartScreen" id="disableSmartScreen">
+                                        Disable SmartScreen
+                                    </label>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>
+                                        <input type="checkbox" name="disableFastStartup" id="disableFastStartup">
+                                        Disable Fast Startup
+                                    </label>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>
+                                        <input type="checkbox" name="disableSystemRestore" id="disableSystemRestore">
+                                        Disable System Restore
+                                    </label>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>
+                                        <input type="checkbox" name="enableLongPaths" id="enableLongPaths">
+                                        Enable long path support (260+ characters)
+                                    </label>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>
+                                        <input type="checkbox" name="enableRemoteDesktop" id="enableRemoteDesktop">
+                                        Enable Remote Desktop
+                                    </label>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>
+                                        <input type="checkbox" name="disableTelemetry" id="disableTelemetry">
+                                        Disable telemetry (set to minimum)
+                                    </label>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>
+                                        <input type="checkbox" name="disableAppSuggestions" id="disableAppSuggestions">
+                                        Disable app suggestions
+                                    </label>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>
+                                        <input type="checkbox" name="disableDeviceEncryption" id="disableDeviceEncryption">
+                                        Prevent device encryption
+                                    </label>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>
+                                        <input type="checkbox" name="disableEdgeFirstRun" id="disableEdgeFirstRun">
+                                        Suppress Edge first run experience
+                                    </label>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>
+                                        <input type="checkbox" name="disableEdgeStartupBoost" id="disableEdgeStartupBoost">
+                                        Disable Edge startup boost
+                                    </label>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>
+                                        <input type="checkbox" name="enableEdgeUninstall" id="enableEdgeUninstall">
+                                        Enable Edge uninstall option
+                                    </label>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>
+                                        <input type="checkbox" name="disableMouseAcceleration" id="disableMouseAcceleration">
+                                        Disable mouse pointer precision (acceleration)
+                                    </label>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>
+                                        <input type="checkbox" name="disableCoreIsolation" id="disableCoreIsolation">
+                                        Disable Core Isolation / VBS
+                                    </label>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>
+                                        <input type="checkbox" name="enableProcessAuditing" id="enableProcessAuditing">
+                                        Enable process creation auditing
+                                    </label>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>
+                                        <input type="checkbox" name="disableSystemSounds" id="disableSystemSounds">
+                                        Disable system sounds
+                                    </label>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>
+                                        <input type="checkbox" name="disableAutoReboot" id="disableAutoReboot">
+                                        Prevent automatic reboot after updates
+                                    </label>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>
+                                        <input type="checkbox" name="optimizeLastAccessTime" id="optimizeLastAccessTime">
+                                        Disable Last Access Time stamps (performance)
+                                    </label>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>
+                                        <input type="checkbox" name="setPowerShellExecutionPolicy" id="setPowerShellExecutionPolicy">
+                                        Set PowerShell execution policy to RemoteSigned
+                                    </label>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>
+                                        <input type="checkbox" name="cleanupWindowsOld" id="cleanupWindowsOld">
+                                        Cleanup empty Windows.old folder
+                                    </label>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>
+                                        <input type="checkbox" name="disableAutoSignIn" id="disableAutoSignIn">
+                                        Disable automatic user sign-in after updates
+                                    </label>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>
+                                        <input type="checkbox" name="disableSmartAppControl" id="disableSmartAppControl">
+                                        Disable Smart App Control
+                                    </label>
+                                </div>
+                            </div>
+                        </section>
+
+                    </div>
+
+                    <!-- TAB 5: USER INTERFACE -->
+                    <div class="tab-content" id="tab-ui">
+
+                        <!-- File Explorer -->
+                        <section class="form-section">
+                            <h2>File Explorer</h2>
+
+                            <div class="form-group">
+                                <label>
+                                    <input type="checkbox" name="explorerShowHidden" id="explorerShowHidden">
+                                    Show hidden files and folders
+                                </label>
+                            </div>
+
+                            <div class="form-group">
+                                <label>
+                                    <input type="checkbox" name="explorerShowExtensions" id="explorerShowExtensions" checked>
+                                    Show file extensions
+                                </label>
+                            </div>
+
+                            <div class="form-group">
+                                <label>
+                                    <input type="checkbox" name="explorerClassicContextMenu" id="explorerClassicContextMenu">
+                                    Use classic context menu (Windows 11)
+                                </label>
+                            </div>
+
+                            <div class="form-group">
+                                <label>
+                                    <input type="checkbox" name="explorerThisPCView" id="explorerThisPCView" checked>
+                                    Default to "This PC" view (instead of Quick Access)
+                                </label>
+                            </div>
+
+                            <div class="form-group">
+                                <label>
+                                    <input type="checkbox" name="explorerEndTaskButton" id="explorerEndTaskButton">
+                                    Show "End Task" in taskbar context menu
+                                </label>
+                            </div>
+                        </section>
+
+                        <!-- Taskbar -->
+                        <section class="form-section">
+                            <h2>Taskbar</h2>
+
+                            <div class="form-group">
+                                <label for="taskbarSearch">Search Box</label>
+                                <select id="taskbarSearch" name="taskbarSearch">
+                                    <option value="default">Default</option>
+                                    <option value="hide">Hide</option>
+                                    <option value="icon">Show icon only</option>
+                                    <option value="box">Show search box</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label>
+                                    <input type="checkbox" name="taskbarHideTaskView" id="taskbarHideTaskView">
+                                    Hide Task View button
+                                </label>
+                            </div>
+
+                            <div class="form-group">
+                                <label>
+                                    <input type="checkbox" name="taskbarHideWidgets" id="taskbarHideWidgets">
+                                    Hide Widgets button (Windows 11)
+                                </label>
+                            </div>
+
+                            <div class="form-group">
+                                <label>
+                                    <input type="checkbox" name="taskbarHideChat" id="taskbarHideChat">
+                                    Hide Chat button (Windows 11)
+                                </label>
+                            </div>
+
+                            <div class="form-group">
+                                <label>
+                                    <input type="checkbox" name="taskbarAlignLeft" id="taskbarAlignLeft">
+                                    Align taskbar to left (Windows 11)
+                                </label>
+                            </div>
+
+                            <div class="form-group">
+                                <label>
+                                    <input type="checkbox" name="taskbarAutoHideTray" id="taskbarAutoHideTray">
+                                    Auto-hide system tray icons
+                                </label>
+                            </div>
+
+                            <div class="form-group">
+                                <label>
+                                    <input type="checkbox" name="taskbarDisableBingSearch" id="taskbarDisableBingSearch">
+                                    Disable Bing search in Start menu
+                                </label>
+                            </div>
+                        </section>
+
+                        <!-- Start Menu - Windows 10 Tiles -->
+                        <section class="form-section">
+                            <h2>Start Menu Tiles (Windows 10)</h2>
+
+                            <div class="form-group">
+                                <label for="startTilesWin10">Tile Layout</label>
+                                <select id="startTilesWin10" name="startTilesWin10">
+                                    <option value="default">Default tiles</option>
+                                    <option value="none">No tiles (empty)</option>
+                                    <option value="custom">Custom layout (XML)</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group" id="startTilesWin10CustomGroup" style="display: none;">
+                                <label for="startTilesWin10XML">Custom Layout XML</label>
+                                <textarea id="startTilesWin10XML" name="startTilesWin10XML" rows="8" placeholder="Paste XML exported from: Export-StartLayout -Path layout.xml"></textarea>
+                                <small>Export your current layout using PowerShell: Export-StartLayout -Path layout.xml</small>
+                            </div>
+                        </section>
+
+                        <!-- Start Menu - Windows 11 Pins -->
+                        <section class="form-section">
+                            <h2>Start Menu Pinned Apps (Windows 11)</h2>
+
+                            <div class="form-group">
+                                <label for="startPinsWin11">Pinned Apps</label>
+                                <select id="startPinsWin11" name="startPinsWin11">
+                                    <option value="default">Default pins</option>
+                                    <option value="none">No pins (empty)</option>
+                                    <option value="custom">Custom layout (JSON)</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group" id="startPinsWin11CustomGroup" style="display: none;">
+                                <label for="startPinsWin11JSON">Custom Layout JSON</label>
+                                <textarea id="startPinsWin11JSON" name="startPinsWin11JSON" rows="8" placeholder='{"pinnedList": [{"desktopAppId": "MSEdge"}, {"packagedAppId": "Microsoft.WindowsCalculator_8wekyb3d8bbwe!App"}]}'></textarea>
+                                <small>JSON format for Windows 11 Start Menu pinned apps</small>
+                            </div>
+                        </section>
+
+                        <!-- Desktop Icons -->
+                        <section class="form-section">
+                            <h2>Desktop Icons</h2>
+
+                            <div class="form-group">
+                                <label>
+                                    <input type="checkbox" name="desktopRemoveEdge" id="desktopRemoveEdge">
+                                    Remove Edge desktop shortcut
+                                </label>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Select desktop icons to show:</label>
+                                <div class="checkbox-grid">
+                                    <label><input type="checkbox" name="desktopIconThisPC" id="desktopIconThisPC"> This PC</label>
+                                    <label><input type="checkbox" name="desktopIconNetwork" id="desktopIconNetwork"> Network</label>
+                                    <label><input type="checkbox" name="desktopIconRecycleBin" id="desktopIconRecycleBin"> Recycle Bin</label>
+                                    <label><input type="checkbox" name="desktopIconControlPanel" id="desktopIconControlPanel"> Control Panel</label>
+                                    <label><input type="checkbox" name="desktopIconUserFiles" id="desktopIconUserFiles"> User's Files</label>
+                                    <label><input type="checkbox" name="desktopIconDocuments" id="desktopIconDocuments"> Documents</label>
+                                    <label><input type="checkbox" name="desktopIconDownloads" id="desktopIconDownloads"> Downloads</label>
+                                    <label><input type="checkbox" name="desktopIconMusic" id="desktopIconMusic"> Music</label>
+                                    <label><input type="checkbox" name="desktopIconPictures" id="desktopIconPictures"> Pictures</label>
+                                    <label><input type="checkbox" name="desktopIconVideos" id="desktopIconVideos"> Videos</label>
+                                </div>
+                            </div>
+                        </section>
+
+                        <!-- Start Menu Folders (Windows 11) -->
+                        <section class="form-section">
+                            <h2>Start Menu Folders (Windows 11)</h2>
+
+                            <div class="form-group">
+                                <label>Select folders to show in Start menu:</label>
+                                <div class="checkbox-grid">
+                                    <label><input type="checkbox" name="startFolderSettings" id="startFolderSettings"> Settings</label>
+                                    <label><input type="checkbox" name="startFolderFileExplorer" id="startFolderFileExplorer"> File Explorer</label>
+                                    <label><input type="checkbox" name="startFolderDocuments" id="startFolderDocuments"> Documents</label>
+                                    <label><input type="checkbox" name="startFolderDownloads" id="startFolderDownloads"> Downloads</label>
+                                    <label><input type="checkbox" name="startFolderMusic" id="startFolderMusic"> Music</label>
+                                    <label><input type="checkbox" name="startFolderPictures" id="startFolderPictures"> Pictures</label>
+                                    <label><input type="checkbox" name="startFolderVideos" id="startFolderVideos"> Videos</label>
+                                    <label><input type="checkbox" name="startFolderNetwork" id="startFolderNetwork"> Network</label>
+                                    <label><input type="checkbox" name="startFolderPersonalFolder" id="startFolderPersonalFolder"> Personal Folder</label>
+                                </div>
+                            </div>
+                        </section>
+
+                    </div>
+
+                    <!-- TAB 6: APPEARANCE -->
+                    <div class="tab-content" id="tab-appearance">
+
+                        <!-- Visual Effects -->
+                        <section class="form-section">
+                            <h2>Visual Effects</h2>
+
+                            <div class="form-group">
+                                <label for="visualEffectsPreset">Visual Effects Preset</label>
+                                <select id="visualEffectsPreset" name="visualEffectsPreset">
+                                    <option value="default">Default Windows settings</option>
+                                    <option value="appearance">Best appearance</option>
+                                    <option value="performance">Best performance</option>
+                                    <option value="custom">Custom settings</option>
+                                </select>
+                            </div>
+
+                            <div id="visualEffectsCustomGroup" style="display: none;">
+                                <div class="form-group">
+                                    <label>Custom visual effects:</label>
+                                    <div class="checkbox-grid">
+                                        <label><input type="checkbox" name="vfxAnimateWindows" id="vfxAnimateWindows"> Animate windows when minimizing/maximizing</label>
+                                        <label><input type="checkbox" name="vfxAnimateControls" id="vfxAnimateControls"> Animate controls and elements</label>
+                                        <label><input type="checkbox" name="vfxFadeMenu" id="vfxFadeMenu"> Fade or slide menus into view</label>
+                                        <label><input type="checkbox" name="vfxFadeTooltips" id="vfxFadeTooltips"> Fade out menu items after clicking</label>
+                                        <label><input type="checkbox" name="vfxSmoothScroll" id="vfxSmoothScroll"> Smooth-scroll list boxes</label>
+                                        <label><input type="checkbox" name="vfxSlideTaskbar" id="vfxSlideTaskbar"> Slide open combo boxes</label>
+                                        <label><input type="checkbox" name="vfxShadowsWindows" id="vfxShadowsWindows"> Show shadows under windows</label>
+                                        <label><input type="checkbox" name="vfxShadowsMouse" id="vfxShadowsMouse"> Show shadows under mouse pointer</label>
+                                        <label><input type="checkbox" name="vfxThumbnails" id="vfxThumbnails"> Show thumbnails instead of icons</label>
+                                        <label><input type="checkbox" name="vfxTranslucent" id="vfxTranslucent"> Show translucent selection rectangle</label>
+                                        <label><input type="checkbox" name="vfxPeek" id="vfxPeek"> Enable Peek (desktop preview)</label>
+                                        <label><input type="checkbox" name="vfxTaskbarThumbnails" id="vfxTaskbarThumbnails"> Show taskbar thumbnails</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                        <!-- Theme -->
+                        <section class="form-section">
+                            <h2>Theme & Colors</h2>
+
+                            <div class="form-group">
+                                <label for="themeMode">Theme Mode</label>
+                                <select id="themeMode" name="themeMode">
+                                    <option value="default">System default</option>
+                                    <option value="dark">Dark</option>
+                                    <option value="light">Light</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label>
+                                    <input type="checkbox" name="enableCustomAccent" id="enableCustomAccent">
+                                    Use custom accent color
+                                </label>
+                            </div>
+
+                            <div id="customAccentGroup" style="display: none;">
+                                <div class="form-group">
+                                    <label for="accentColor">Accent Color</label>
+                                    <input type="color" id="accentColor" name="accentColor" value="#0078d4">
+                                    <small>RGB color picker for Windows accent color</small>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>
+                                        <input type="checkbox" name="accentOnStartTaskbar" id="accentOnStartTaskbar">
+                                        Show accent color on Start and taskbar
+                                    </label>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>
+                                        <input type="checkbox" name="accentOnTitleBars" id="accentOnTitleBars">
+                                        Show accent color on title bars and borders
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>
+                                    <input type="checkbox" name="enableTransparency" id="enableTransparency">
+                                    Enable transparency effects
+                                </label>
+                            </div>
+                        </section>
+
+                        <!-- Wallpaper -->
+                        <section class="form-section">
+                            <h2>Desktop Wallpaper</h2>
+
+                            <div class="form-group">
+                                <label for="wallpaperMode">Wallpaper Mode</label>
+                                <select id="wallpaperMode" name="wallpaperMode">
+                                    <option value="default">Default Windows wallpaper</option>
+                                    <option value="solid">Solid color</option>
+                                    <option value="custom">Custom image (base64)</option>
+                                    <option value="path">Custom image (file path)</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group" id="wallpaperSolidGroup" style="display: none;">
+                                <label for="wallpaperColor">Background Color</label>
+                                <input type="color" id="wallpaperColor" name="wallpaperColor" value="#000000">
+                            </div>
+
+                            <div class="form-group" id="wallpaperCustomGroup" style="display: none;">
+                                <label for="wallpaperFile">Upload Wallpaper Image</label>
+                                <input type="file" id="wallpaperFile" name="wallpaperFile" accept="image/jpeg,image/png,image/bmp">
+                                <small>Image will be embedded as base64 in the XML file</small>
+                            </div>
+
+                            <div class="form-group" id="wallpaperPathGroup" style="display: none;">
+                                <label for="wallpaperPath">Wallpaper File Path</label>
+                                <input type="text" id="wallpaperPath" name="wallpaperPath" placeholder="C:\Windows\Web\Wallpaper\Windows\img0.jpg">
+                                <small>Path to wallpaper image on target system</small>
+                            </div>
+
+                            <div class="form-group" id="wallpaperStyleGroup" style="display: none;">
+                                <label for="wallpaperStyle">Wallpaper Style</label>
+                                <select id="wallpaperStyle" name="wallpaperStyle">
+                                    <option value="fill">Fill</option>
+                                    <option value="fit">Fit</option>
+                                    <option value="stretch">Stretch</option>
+                                    <option value="tile">Tile</option>
+                                    <option value="center">Center</option>
+                                    <option value="span">Span</option>
+                                </select>
+                            </div>
+                        </section>
+
+                        <!-- Lock Screen -->
+                        <section class="form-section">
+                            <h2>Lock Screen</h2>
+
+                            <div class="form-group">
+                                <label>
+                                    <input type="checkbox" name="disableLockScreen" id="disableLockScreen">
+                                    Disable lock screen
+                                </label>
+                                <small>Skip the lock screen and go directly to login</small>
+                            </div>
+
+                            <div class="form-group">
+                                <label>
+                                    <input type="checkbox" name="customLockScreen" id="customLockScreen">
+                                    Use custom lock screen image
+                                </label>
+                            </div>
+
+                            <div class="form-group" id="lockScreenImageGroup" style="display: none;">
+                                <label for="lockScreenFile">Upload Lock Screen Image</label>
+                                <input type="file" id="lockScreenFile" name="lockScreenFile" accept="image/jpeg,image/png">
+                                <small>Recommended resolution: 1920x1080 or higher</small>
+                            </div>
+                        </section>
+
+                    </div>
+
+                    <!-- TAB 7: NETWORK & TOOLS -->
+                    <div class="tab-content" id="tab-network">
+
+                        <!-- Wi-Fi Configuration -->
+                        <section class="form-section">
+                            <h2>Wi-Fi Configuration</h2>
+
+                            <div class="form-group">
+                                <label for="wifiMode">Wi-Fi Setup Mode</label>
+                                <select id="wifiMode" name="wifiMode">
+                                    <option value="interactive">Interactive (ask during setup)</option>
+                                    <option value="skip">Skip Wi-Fi setup</option>
+                                    <option value="configure">Pre-configure network</option>
+                                    <option value="xml">Custom XML profile</option>
+                                </select>
+                            </div>
+
+                            <div id="wifiConfigureGroup" style="display: none;">
+                                <div class="form-group">
+                                    <label for="wifiSSID">Network SSID</label>
+                                    <input type="text" id="wifiSSID" name="wifiSSID" placeholder="MyNetwork">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="wifiAuth">Authentication</label>
+                                    <select id="wifiAuth" name="wifiAuth">
+                                        <option value="open">Open (no password)</option>
+                                        <option value="wpa2psk">WPA2-Personal</option>
+                                        <option value="wpa3psk">WPA3-Personal</option>
+                                        <option value="wpa2">WPA2-Enterprise</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group" id="wifiPasswordGroup" style="display: none;">
+                                    <label for="wifiPassword">Wi-Fi Password</label>
+                                    <input type="password" id="wifiPassword" name="wifiPassword">
+                                </div>
+
+                                <div class="form-group">
+                                    <label>
+                                        <input type="checkbox" name="wifiHiddenNetwork" id="wifiHiddenNetwork">
+                                        Hidden network (non-broadcast SSID)
+                                    </label>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>
+                                        <input type="checkbox" name="wifiAutoConnect" id="wifiAutoConnect" checked>
+                                        Connect automatically
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="form-group" id="wifiXMLGroup" style="display: none;">
+                                <label for="wifiXMLProfile">Custom Wi-Fi Profile XML</label>
+                                <textarea id="wifiXMLProfile" name="wifiXMLProfile" rows="10" placeholder="Paste XML exported from: netsh wlan export profile name=&quot;MyNetwork&quot;"></textarea>
+                                <small>Export profile using: netsh wlan export profile name="NetworkName" key=clear</small>
+                            </div>
+                        </section>
+
+                        <!-- VM Guest Tools -->
+                        <section class="form-section">
+                            <h2>Virtual Machine Guest Tools</h2>
+                            <p class="section-description">Automatically install VM guest tools during setup</p>
+
+                            <div class="form-group">
+                                <label>
+                                    <input type="checkbox" name="vmVirtualBox" id="vmVirtualBox">
+                                    Oracle VirtualBox Guest Additions
+                                </label>
+                            </div>
+
+                            <div class="form-group">
+                                <label>
+                                    <input type="checkbox" name="vmVMware" id="vmVMware">
+                                    VMware Tools
+                                </label>
+                            </div>
+
+                            <div class="form-group">
+                                <label>
+                                    <input type="checkbox" name="vmVirtIO" id="vmVirtIO">
+                                    VirtIO Guest Tools + QEMU Guest Agent
+                                </label>
+                            </div>
+
+                            <div class="form-group">
+                                <label>
+                                    <input type="checkbox" name="vmParallels" id="vmParallels">
+                                    Parallels Tools
+                                </label>
+                            </div>
+                        </section>
+
+                        <!-- Accessibility -->
+                        <section class="form-section">
+                            <h2>Accessibility & Lock Keys</h2>
+
+                            <div class="form-group">
+                                <label for="capsLockState">Caps Lock Initial State</label>
+                                <select id="capsLockState" name="capsLockState">
+                                    <option value="default">System default</option>
+                                    <option value="on">On</option>
+                                    <option value="off">Off</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="numLockState">Num Lock Initial State</label>
+                                <select id="numLockState" name="numLockState">
+                                    <option value="default">System default</option>
+                                    <option value="on">On</option>
+                                    <option value="off">Off</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="scrollLockState">Scroll Lock Initial State</label>
+                                <select id="scrollLockState" name="scrollLockState">
+                                    <option value="default">System default</option>
+                                    <option value="on">On</option>
+                                    <option value="off">Off</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="stickyKeysMode">Sticky Keys</label>
+                                <select id="stickyKeysMode" name="stickyKeysMode">
+                                    <option value="default">Default Windows settings</option>
+                                    <option value="disabled">Disabled</option>
+                                    <option value="custom">Custom configuration</option>
+                                </select>
+                            </div>
+
+                            <div id="stickyKeysCustomGroup" style="display: none;">
+                                <div class="form-group">
+                                    <label>
+                                        <input type="checkbox" name="stickyKeysActivation" id="stickyKeysActivation">
+                                        Enable Shift key activation (press 5 times)
+                                    </label>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>
+                                        <input type="checkbox" name="stickyKeysAudio" id="stickyKeysAudio">
+                                        Play sound when toggling
+                                    </label>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>
+                                        <input type="checkbox" name="stickyKeysIcon" id="stickyKeysIcon">
+                                        Show icon on taskbar
+                                    </label>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>
+                                        <input type="checkbox" name="stickyKeysLock" id="stickyKeysLock">
+                                        Lock modifier keys when pressed twice
+                                    </label>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>
+                                        <input type="checkbox" name="stickyKeysTwoKeys" id="stickyKeysTwoKeys">
+                                        Turn off when two keys pressed simultaneously
+                                    </label>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>
+                                        <input type="checkbox" name="stickyKeysConfirm" id="stickyKeysConfirm">
+                                        Show confirmation dialog
+                                    </label>
+                                </div>
+                            </div>
+                        </section>
+
+                        <!-- Privacy / Express Settings -->
+                        <section class="form-section">
+                            <h2>Privacy / Express Settings</h2>
+
+                            <div class="form-group">
+                                <label for="privacySettings">Privacy Settings Mode</label>
+                                <select id="privacySettings" name="privacySettings">
+                                    <option value="interactive">Interactive (ask during setup)</option>
+                                    <option value="disable">Disable all (maximum privacy)</option>
+                                    <option value="enable">Enable all (full telemetry)</option>
+                                </select>
+                                <small>Controls Windows telemetry, diagnostics, and app permissions during OOBE</small>
+                            </div>
+                        </section>
+
+                    </div>
+
+                    <!-- TAB 8: SCRIPTS & ADVANCED -->
+                    <div class="tab-content" id="tab-scripts">
+
+                        <!-- Script Phases -->
+                        <section class="form-section">
+                            <h2>Custom Scripts</h2>
+                            <p class="section-description">Add custom scripts to run at different phases of Windows installation</p>
+
+                            <!-- System Phase -->
+                            <div class="script-phase">
+                                <h3>System Phase (Specialize Pass)</h3>
+                                <small>Runs during Windows setup before first logon, with SYSTEM privileges</small>
+
+                                <div class="form-group">
+                                    <label for="systemScriptType">Script Type</label>
+                                    <select id="systemScriptType" name="systemScriptType">
+                                        <option value="">None</option>
+                                        <option value="cmd">.cmd (Batch)</option>
+                                        <option value="ps1">.ps1 (PowerShell)</option>
+                                        <option value="reg">.reg (Registry)</option>
+                                        <option value="vbs">.vbs (VBScript)</option>
+                                        <option value="js">.js (JScript)</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group" id="systemScriptGroup" style="display: none;">
+                                    <label for="systemScript">Script Content</label>
+                                    <textarea id="systemScript" name="systemScript" rows="10" class="code-textarea"></textarea>
+                                </div>
+                            </div>
+
+                            <!-- UserOnce Phase -->
+                            <div class="script-phase">
+                                <h3>UserOnce Phase</h3>
+                                <small>Runs once for each new user on first logon</small>
+
+                                <div class="form-group">
+                                    <label for="userOnceScriptType">Script Type</label>
+                                    <select id="userOnceScriptType" name="userOnceScriptType">
+                                        <option value="">None</option>
+                                        <option value="cmd">.cmd (Batch)</option>
+                                        <option value="ps1">.ps1 (PowerShell)</option>
+                                        <option value="reg">.reg (Registry)</option>
+                                        <option value="vbs">.vbs (VBScript)</option>
+                                        <option value="js">.js (JScript)</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group" id="userOnceScriptGroup" style="display: none;">
+                                    <label for="userOnceScript">Script Content</label>
+                                    <textarea id="userOnceScript" name="userOnceScript" rows="10" class="code-textarea"></textarea>
+                                </div>
+                            </div>
+
+                            <!-- FirstLogon Phase -->
+                            <div class="script-phase">
+                                <h3>FirstLogon Phase</h3>
+                                <small>Runs on first administrator logon after installation</small>
+
+                                <div class="form-group">
+                                    <label for="firstLogonScriptType">Script Type</label>
+                                    <select id="firstLogonScriptType" name="firstLogonScriptType">
+                                        <option value="">None</option>
+                                        <option value="cmd">.cmd (Batch)</option>
+                                        <option value="ps1">.ps1 (PowerShell)</option>
+                                        <option value="reg">.reg (Registry)</option>
+                                        <option value="vbs">.vbs (VBScript)</option>
+                                        <option value="js">.js (JScript)</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group" id="firstLogonScriptGroup" style="display: none;">
+                                    <label for="firstLogonScript">Script Content</label>
+                                    <textarea id="firstLogonScript" name="firstLogonScript" rows="10" class="code-textarea"></textarea>
+                                </div>
+                            </div>
+
+                            <!-- DefaultUser Phase -->
+                            <div class="script-phase">
+                                <h3>DefaultUser Phase</h3>
+                                <small>Applied to default user profile, affects all new users</small>
+
+                                <div class="form-group">
+                                    <label for="defaultUserScriptType">Script Type</label>
+                                    <select id="defaultUserScriptType" name="defaultUserScriptType">
+                                        <option value="">None</option>
+                                        <option value="cmd">.cmd (Batch)</option>
+                                        <option value="ps1">.ps1 (PowerShell)</option>
+                                        <option value="reg">.reg (Registry)</option>
+                                        <option value="vbs">.vbs (VBScript)</option>
+                                        <option value="js">.js (JScript)</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group" id="defaultUserScriptGroup" style="display: none;">
+                                    <label for="defaultUserScript">Script Content</label>
+                                    <textarea id="defaultUserScript" name="defaultUserScript" rows="10" class="code-textarea"></textarea>
+                                </div>
+                            </div>
+                        </section>
+
+                        <!-- Advanced Components -->
+                        <section class="form-section">
+                            <h2>Advanced Components</h2>
+
+                            <div class="form-group">
+                                <label for="customComponents">Custom Components XML</label>
+                                <textarea id="customComponents" name="customComponents" rows="10" class="code-textarea" placeholder="<!-- Add custom XML components here -->&#10;<!-- Example: Additional registry keys, services, etc. -->"></textarea>
+                                <small>Advanced: Add custom XML components to the answer file</small>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="appLockerPolicy">AppLocker Policy XML</label>
+                                <textarea id="appLockerPolicy" name="appLockerPolicy" rows="10" class="code-textarea" placeholder="<!-- AppLocker policy XML -->&#10;<!-- Use Local Security Policy editor to create and export policy -->"></textarea>
+                                <small>Configure AppLocker application control policies</small>
+                            </div>
+                        </section>
+
+                        <!-- Distribution Share -->
+                        <section class="form-section">
+                            <h2>Distribution Share ($OEM$ Folders)</h2>
+                            <div class="info-box">
+                                <h4>About Distribution Shares</h4>
+                                <p>You can include additional files in your installation media using the $OEM$ folder structure:</p>
+                                <ul>
+                                    <li><strong>$OEM$\$1\</strong> - Files copied to C:\</li>
+                                    <li><strong>$OEM$\$$\</strong> - Files copied to C:\Windows\</li>
+                                    <li><strong>$OEM$\$Progs\</strong> - Files copied to C:\Program Files\</li>
+                                    <li><strong>$OEM$\$Docs\</strong> - Files copied to user profiles</li>
+                                </ul>
+                                <p>Place the $OEM$ folder in the same directory as your autounattend.xml file on the installation media.</p>
+                            </div>
+                        </section>
+
+                        <!-- Output Preview -->
+                        <section class="form-section">
+                            <h2>XML Preview</h2>
+                            <div class="preview-container">
+                                <pre id="xmlPreview"><code>&lt;!-- Configure options in the tabs above to see XML preview --&gt;</code></pre>
+                            </div>
+                        </section>
+
+                    </div>
+
+                </form>
+            </main>
+        </div>
+
+        <footer>
+            <p>
+                Complete Windows Unattend Generator with 100+ configuration options |
+                <a href="https://github.com/cschneegans/unattend-generator" target="_blank">Original Project by cschneegans</a> |
+                <a href="https://schneegans.de/windows/unattend-generator/" target="_blank">Official Generator</a>
+            </p>
+        </footer>
+    </div>
+
+    <input type="file" id="fileInput" accept=".xml,.json" style="display: none;">
+
+    <!-- Core Scripts -->
+    <script src="js/utils.js"></script>
+    <script src="js/countries-data.js"></script>
+    <script src="js/languages-data.js"></script>
+    <script src="js/config-model.js"></script>
+    <script src="js/state-manager.js"></script>
+    <script src="js/ui-components.js"></script>
+    <script src="js/validation.js"></script>
+    <script src="js/registry-generator.js"></script>
+    <script src="js/xml-generator.js"></script>
+    <script src="js/presets.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
