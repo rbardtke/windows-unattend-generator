@@ -15,21 +15,48 @@ class XmlGenerator {
     generate() {
         const lines = [];
         lines.push('<?xml version="1.0" encoding="utf-8"?>');
+        // SCHNEEGANS FORMAT: No xmlns:wcm on root - it's declared on each component that needs it
         lines.push('<unattend xmlns="urn:schemas-microsoft-com:unattend">');
 
         // Get selected architectures
         const architectures = this.getSelectedArchitectures();
 
-        // Generate for each architecture
-        architectures.forEach(arch => {
-            lines.push(...this.generateWindowsPE(arch));
-            lines.push(...this.generateSpecialize(arch));
-            lines.push(...this.generateOobeSystem(arch));
-        });
+        // SCHNEEGANS FORMAT: Only include settings passes that have content
+        // Generate components with x86 initially, then clone for other architectures
+
+        // windowsPE pass - Generate once with x86
+        const windowsPEComponents = this.generateWindowsPEComponents('x86');
+        if (windowsPEComponents.length > 0) {
+            lines.push('    <settings pass="windowsPE">');
+            lines.push(...windowsPEComponents);
+            lines.push('    </settings>');
+        }
+
+        // specialize pass - Generate once with x86
+        const specializeComponents = this.generateSpecializeComponents('x86');
+        if (specializeComponents.length > 0) {
+            lines.push('    <settings pass="specialize">');
+            lines.push(...specializeComponents);
+            lines.push('    </settings>');
+        }
+
+        // oobeSystem pass - Generate once with x86
+        const oobeSystemComponents = this.generateOobeSystemComponents('x86');
+        if (oobeSystemComponents.length > 0) {
+            lines.push('    <settings pass="oobeSystem">');
+            lines.push(...oobeSystemComponents);
+            lines.push('    </settings>');
+        }
 
         lines.push('</unattend>');
 
-        return this.formatXML(lines.join('\n'));
+        // Clone components for additional architectures (schneegans-compatible approach)
+        let xml = lines.join('\n');
+        if (architectures.length > 1 || (architectures.length === 1 && architectures[0] !== 'x86')) {
+            xml = this.cloneComponentsForArchitectures(xml, architectures);
+        }
+
+        return this.formatXML(xml);
     }
 
     /**
@@ -44,11 +71,10 @@ class XmlGenerator {
     }
 
     /**
-     * WindowsPE Pass (1) - Initial Setup
+     * WindowsPE Pass (1) - Initial Setup - Components only (no settings wrapper)
      */
-    generateWindowsPE(arch) {
+    generateWindowsPEComponents(arch) {
         const lines = [];
-        lines.push(`    <settings pass="windowsPE">`);
 
         // International Core
         lines.push(`        <component name="Microsoft-Windows-International-Core-WinPE" processorArchitecture="${arch}" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State">`);
@@ -65,8 +91,9 @@ class XmlGenerator {
 
         lines.push(`        </component>`);
 
-        // Windows Setup
+        // Windows Setup (with xmlns:wcm and xmlns:xsi for actions)
         lines.push(`        <component name="Microsoft-Windows-Setup" processorArchitecture="${arch}" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">`);
+
 
         // Bypass Windows 11 requirements
         if (this.config.bypassTPM || this.config.bypassSecureBoot || this.config.bypassRAM || this.config.bypassStorage) {
@@ -257,17 +284,15 @@ class XmlGenerator {
         lines.push(`            </UserData>`);
 
         lines.push(`        </component>`);
-        lines.push(`    </settings>`);
 
         return lines;
     }
 
     /**
-     * Specialize Pass (4) - System Configuration
+     * Specialize Pass (4) - System Configuration - Components only (no settings wrapper)
      */
-    generateSpecialize(arch) {
+    generateSpecializeComponents(arch) {
         const lines = [];
-        lines.push(`    <settings pass="specialize">`);
 
         // Shell Setup - Computer Name
         lines.push(`        <component name="Microsoft-Windows-Shell-Setup" processorArchitecture="${arch}" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS">`);
@@ -288,19 +313,16 @@ class XmlGenerator {
             lines.push(`        </component>`);
         }
 
-        lines.push(`    </settings>`);
-
         return lines;
     }
 
     /**
-     * OobeSystem Pass (7) - User Experience & First Boot
+     * OobeSystem Pass (7) - User Experience & First Boot - Components only (no settings wrapper)
      */
-    generateOobeSystem(arch) {
+    generateOobeSystemComponents(arch) {
         const lines = [];
-        lines.push(`    <settings pass="oobeSystem">`);
 
-        // Shell Setup
+        // Shell Setup (with xmlns:wcm for actions and commands)
         lines.push(`        <component name="Microsoft-Windows-Shell-Setup" processorArchitecture="${arch}" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State">`);
 
         // OOBE Settings
@@ -398,7 +420,6 @@ class XmlGenerator {
         }
 
         lines.push(`        </component>`);
-        lines.push(`    </settings>`);
 
         return lines;
     }
@@ -510,16 +531,69 @@ class XmlGenerator {
     }
 
     /**
+     * Clone components for additional architectures (schneegans-compatible)
+     * This mimics the ProcessorArchitectureModifier behavior from schneegans
+     */
+    cloneComponentsForArchitectures(xmlString, architectures) {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(xmlString, 'application/xml');
+
+        // Check for parsing errors
+        const parserError = doc.querySelector('parsererror');
+        if (parserError) {
+            console.error('XML parsing error:', parserError.textContent);
+            return xmlString; // Return original if parsing fails
+        }
+
+        // Find all components with processorArchitecture attribute
+        const components = doc.querySelectorAll('component[processorArchitecture]');
+
+        components.forEach(component => {
+            const parent = component.parentNode;
+            let insertAfter = component;
+
+            // Set first architecture on existing component
+            if (architectures.length > 0) {
+                component.setAttribute('processorArchitecture', architectures[0]);
+            }
+
+            // Clone for each additional architecture
+            for (let i = 1; i < architectures.length; i++) {
+                const clone = component.cloneNode(true);
+                clone.setAttribute('processorArchitecture', architectures[i]);
+
+                // Insert clone after the previous component/clone
+                if (insertAfter.nextSibling) {
+                    parent.insertBefore(clone, insertAfter.nextSibling);
+                } else {
+                    parent.appendChild(clone);
+                }
+
+                insertAfter = clone;
+            }
+        });
+
+        // Serialize back to string - get only the document element, not the whole document
+        const serializer = new XMLSerializer();
+        let result = serializer.serializeToString(doc.documentElement);
+
+        // Add XML declaration
+        result = '<?xml version="1.0" encoding="utf-8"?>\n' + result;
+
+        // Debug: log first and last characters
+        console.log('cloneComponentsForArchitectures result:');
+        console.log('First 50 chars:', result.substring(0, 50));
+        console.log('Last 50 chars:', result.substring(result.length - 50));
+
+        return result;
+    }
+
+    /**
      * Format XML with proper indentation
      */
     formatXML(xml) {
-        const formatted = [];
-        let indent = '';
-        xml.split(/>\s*</).forEach(node => {
-            if (node.match(/^\/\w/)) indent = indent.substring(4);
-            formatted.push(indent + '<' + node + '>');
-            if (node.match(/^<?\w[^>]*[^\/]$/)) indent += '    ';
-        });
-        return formatted.join('\n').replace(/^    /, '').replace(/>[\n]</g, '>\n<');
+        // Don't use complex regex formatting - just return clean XML
+        // The lines are already properly indented when generated
+        return xml;
     }
 }

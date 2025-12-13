@@ -141,6 +141,15 @@ class UnattendApp {
             const generator = new XmlGenerator(config);
             const xml = generator.generate();
 
+            // Debug: Check for extra characters
+            console.log('=== XML GENERATION DEBUG ===');
+            console.log('First 100 chars:', xml.substring(0, 100));
+            console.log('Last 100 chars:', xml.substring(xml.length - 100));
+            console.log('Starts with <?xml:', xml.startsWith('<?xml'));
+            console.log('Ends with </unattend>:', xml.endsWith('</unattend>'));
+            console.log('First char code:', xml.charCodeAt(0), 'Expected 60 for <');
+            console.log('Last char code:', xml.charCodeAt(xml.length - 1), 'Expected 62 for >');
+
             this.downloadFile(xml, 'autounattend.xml', 'text/xml');
             this.showNotification('autounattend.xml generated successfully!', 'success');
         } catch (error) {
@@ -243,19 +252,36 @@ class UnattendApp {
             const element = this.form.elements[key];
             if (!element) continue;
 
+            let targetElement = element; // Element to dispatch event on
+
             if (element.type === 'checkbox') {
                 element.checked = Boolean(value);
             } else if (element.type === 'radio') {
                 const radio = this.form.querySelector(`input[name="${key}"][value="${value}"]`);
-                if (radio) radio.checked = true;
+                if (radio) {
+                    radio.checked = true;
+                    targetElement = radio; // Dispatch on the specific radio button
+                } else {
+                    continue; // Skip if radio not found
+                }
+            } else if (element instanceof RadioNodeList) {
+                // Handle RadioNodeList case (multiple elements with same name)
+                const selectedRadio = Array.from(element).find(r => r.checked);
+                if (selectedRadio) {
+                    targetElement = selectedRadio;
+                } else {
+                    continue; // Skip if no radio is selected
+                }
             } else if (element.tagName === 'SELECT' || element.type === 'text' ||
                        element.type === 'password' || element.type === 'number' ||
                        element.type === 'color' || element.tagName === 'TEXTAREA') {
                 element.value = value;
             }
 
-            // Trigger change event to update conditional fields
-            element.dispatchEvent(new Event('change', { bubbles: true }));
+            // Trigger change event only on actual DOM elements
+            if (targetElement && typeof targetElement.dispatchEvent === 'function') {
+                targetElement.dispatchEvent(new Event('change', { bubbles: true }));
+            }
         }
     }
 
