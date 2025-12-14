@@ -184,7 +184,18 @@ class UnattendApp {
                 this.applyConfig(config);
                 this.showNotification('Configuration imported from JSON', 'success');
             } else if (extension === 'xml') {
-                this.showNotification('XML import coming soon - use JSON for now', 'info');
+                // Read XML file
+                const xmlContent = await this.readFileAsText(file);
+
+                // Parse XML to extract configuration
+                const parser = new XmlParser(xmlContent);
+                const config = parser.parse();
+
+                console.log('Parsed configuration from XML:', config);
+
+                // Apply configuration to form
+                this.applyConfig(config);
+                this.showNotification('Configuration imported from XML', 'success');
             } else {
                 this.showNotification('Unsupported file type. Use .json or .xml', 'error');
             }
@@ -194,6 +205,18 @@ class UnattendApp {
             console.error('Import failed:', error);
             this.showNotification(`Import failed: ${error.message}`, 'error');
         }
+    }
+
+    /**
+     * Read file as text
+     */
+    readFileAsText(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = (e) => resolve(e.target.result);
+            reader.onerror = (e) => reject(new Error('Failed to read file'));
+            reader.readAsText(file);
+        });
     }
 
     /**
@@ -337,7 +360,7 @@ class UnattendApp {
         setTimeout(() => {
             notification.style.animation = 'slideOut 0.3s ease-in';
             setTimeout(() => notification.remove(), 300);
-        }, 3000);
+        }, 5000);
     }
 
     /**

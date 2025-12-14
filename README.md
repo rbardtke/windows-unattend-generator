@@ -13,7 +13,9 @@ A comprehensive pure HTML/JavaScript web application for generating highly custo
 - **Multi-Architecture Support**: x86, amd64 (x64), and ARM64
 - **Live XML Preview**: See the generated XML in real-time with syntax highlighting
 - **Configuration Presets**: 5 pre-configured templates for common scenarios
-- **Import/Export**: Save and load configurations in JSON format
+- **Import/Export**: Save and load configurations in JSON or **XML format** 🆕
+- **XML Import**: Import generated autounattend.xml files back into the generator 🆕
+- **XML Validation**: Built-in Python validator for Linux users 🆕
 - **Auto-Save**: Configuration automatically saved to localStorage
 - **No Dependencies**: Pure vanilla JavaScript, no frameworks needed
 - **Responsive Design**: Works on desktop, tablet, and mobile devices
@@ -143,9 +145,27 @@ The application includes 5 pre-configured presets:
 - Use "Save Config (JSON)" to export configuration for backup
 
 ### Import/Export
-- **Export**: Click "Save Config (JSON)" to save your configuration
-- **Import**: Click "Import Config" and select a JSON file
+- **Export JSON**: Click "Save Config (JSON)" to save your configuration
+- **Import JSON**: Click "Import (XML/JSON)" and select a JSON file
+- **Import XML**: Click "Import (XML/JSON)" and select an autounattend.xml file 🆕
+  - Import generated XML files back into the generator
+  - Edit and regenerate existing configurations
+  - Works with files from schneegans.de or other sources
 - Share configurations between systems or with team members
+
+### XML Validation (Linux Users) 🆕
+```bash
+# Validate generated XML files
+python3 validate_xml.py autounattend.xml
+
+# Output shows:
+# - XML well-formedness check
+# - Structure validation
+# - Component listing
+# - Architecture detection
+```
+
+See [VALIDATION.md](VALIDATION.md) for complete validation documentation.
 
 ### Multi-Account Setup
 - Click "Add Account" to create additional user accounts (up to 99)
@@ -162,6 +182,7 @@ schneegans-unattend-web/
 ├── js/
 │   ├── app.js               # Main application controller
 │   ├── xml-generator.js     # Comprehensive XML generation engine
+│   ├── xml-parser.js        # XML import parser 🆕
 │   ├── ui-components.js     # Dynamic UI components (tabs, accounts table)
 │   ├── config-model.js      # Configuration data model
 │   ├── state-manager.js     # localStorage persistence
@@ -171,6 +192,10 @@ schneegans-unattend-web/
 │   ├── utils.js             # Utility functions
 │   ├── countries-data.js    # 240+ countries for GeoLocation
 │   └── languages-data.js    # Language/keyboard/timezone data
+├── validate_xml.py           # Python XML validator (Linux) 🆕
+├── VALIDATION.md             # XML validation guide 🆕
+├── TEST_XML_IMPORT.md        # XML import testing guide 🆕
+├── test_xml_parser.html      # Standalone XML parser tester 🆕
 ├── backup/                   # Backup of simple version
 └── README.md                # This file
 ```
