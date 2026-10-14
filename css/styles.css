@@ -788,3 +788,89 @@ textarea.valid {
 .mb-20 {
     margin-bottom: 20px;
 }
+
+/* Code editor: highlighted <pre> behind a transparent <textarea> */
+.code-editor {
+    position: relative;
+    width: 100%;
+}
+
+.code-editor textarea.code-textarea,
+.code-editor .code-editor-highlight {
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-size: 13px;
+    line-height: 1.5;
+    tab-size: 4;
+    padding: 10px 12px;
+    margin: 0;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+    word-break: break-all;
+    box-sizing: border-box;
+}
+
+.code-editor textarea.code-textarea {
+    position: relative;
+    display: block;
+    width: 100%;
+    background: transparent;
+    color: transparent;
+    caret-color: var(--text-color);
+    z-index: 1;
+}
+
+.code-editor textarea.code-textarea::selection {
+    background: rgba(0, 120, 212, 0.3);
+}
+
+.code-editor .code-editor-highlight {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    pointer-events: none;
+    border-color: transparent;
+    background: #ffffff;
+    color: var(--text-color);
+    z-index: 0;
+}
+
+.code-editor .code-editor-highlight code {
+    font: inherit;
+    white-space: inherit;
+    color: inherit;
+}
+
+.tok-comment { color: #6a737d; font-style: italic; }
+.tok-string { color: #a31515; }
+.tok-variable { color: #001080; }
+.tok-keyword { color: #0000ff; }
+.tok-cmdlet { color: #795e26; }
+.tok-param { color: #267f99; }
+.tok-type { color: #267f99; }
+.tok-number { color: #098658; }
+.tok-header { color: #800080; font-weight: 600; }
+.tok-label { color: #800080; }
+.tok-operator { color: #5c5c5c; }
+
+@media (prefers-color-scheme: dark) {
+    .code-editor .code-editor-highlight {
+        background: #383838;
+    }
+
+    .tok-comment { color: #6a9955; }
+    .tok-string { color: #ce9178; }
+    .tok-variable { color: #9cdcfe; }
+    .tok-keyword { color: #569cd6; }
+    .tok-cmdlet { color: #dcdcaa; }
+    .tok-param { color: #4fc1ff; }
+    .tok-type { color: #4ec9b0; }
+    .tok-number { color: #b5cea8; }
+    .tok-header { color: #c586c0; }
+    .tok-label { color: #c586c0; }
+    .tok-operator { color: #d4d4d4; }
+}

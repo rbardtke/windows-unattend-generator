@@ -275,15 +275,21 @@ class UIComponents {
         phases.forEach(phase => {
             const selector = document.getElementById(`${phase}ScriptType`);
             const group = document.getElementById(`${phase}ScriptGroup`);
+            const textarea = group.querySelector('textarea');
+            CodeEditor.enhance(textarea, selector.value || 'ps1');
 
             selector.addEventListener('change', (e) => {
                 group.style.display = e.target.value ? 'block' : 'none';
 
-                // Update textarea placeholder based on script type
-                const textarea = group.querySelector('textarea');
+                // Update textarea placeholder and highlighting based on script type
                 this.updateScriptPlaceholder(textarea, e.target.value);
+                CodeEditor.setLanguage(textarea, e.target.value || 'ps1');
             });
         });
+
+        // Other script-like boxes
+        CodeEditor.enhance(document.getElementById('computerNameScript'), 'ps1');
+        CodeEditor.enhance(document.getElementById('customDiskPart'), 'cmd');
     }
 
     static updateScriptPlaceholder(textarea, scriptType) {

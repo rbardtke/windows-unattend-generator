@@ -23,6 +23,7 @@ embedded as files instead of being squeezed into a 1,024-character `CommandLine`
 - **XML Validation**: Built-in Python validator for Linux users 🆕
 - **Auto-Save**: Configuration automatically saved to localStorage
 - **No Dependencies**: Pure vanilla JavaScript, no frameworks needed
+- **Syntax Highlighting**: Built-in highlighter for PowerShell, batch, .reg, VBScript and JScript in every script box
 - **Responsive Design**: Works on desktop, tablet, and mobile devices
 - **Dark Mode**: Automatic dark mode based on system preferences
 
