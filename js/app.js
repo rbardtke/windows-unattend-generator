@@ -193,7 +193,10 @@ class UnattendApp {
 
                 console.log('Parsed configuration from XML:', config);
 
-                // Apply configuration to form
+                // Start from the defaults so options absent from the file are reset, then apply
+                this.applyConfig(ConfigModel.getDefaults());
+                const accountCount = Object.keys(config).filter(k => /^account_\d+_username$/.test(k)).length;
+                UIComponents.ensureAccountRows(accountCount);
                 this.applyConfig(config);
                 this.showNotification('Configuration imported from XML', 'success');
             } else {
@@ -288,13 +291,11 @@ class UnattendApp {
                     continue; // Skip if radio not found
                 }
             } else if (element instanceof RadioNodeList) {
-                // Handle RadioNodeList case (multiple elements with same name)
-                const selectedRadio = Array.from(element).find(r => r.checked);
-                if (selectedRadio) {
-                    targetElement = selectedRadio;
-                } else {
-                    continue; // Skip if no radio is selected
-                }
+                // Radio group: select the radio whose value matches
+                const radio = Array.from(element).find(r => r.value === String(value));
+                if (!radio) continue;
+                radio.checked = true;
+                targetElement = radio;
             } else if (element.tagName === 'SELECT' || element.type === 'text' ||
                        element.type === 'password' || element.type === 'number' ||
                        element.type === 'color' || element.tagName === 'TEXTAREA') {

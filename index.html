@@ -35,6 +35,7 @@
                 <button class="tab-btn" data-tab="accounts">Computer & Accounts</button>
                 <button class="tab-btn" data-tab="disk">Disk Configuration</button>
                 <button class="tab-btn" data-tab="system">System Configuration</button>
+                <button class="tab-btn" data-tab="remove">Remove Apps</button>
                 <button class="tab-btn" data-tab="ui">User Interface</button>
                 <button class="tab-btn" data-tab="appearance">Appearance</button>
                 <button class="tab-btn" data-tab="network">Network & Tools</button>
@@ -132,7 +133,8 @@
 
                             <div class="form-group">
                                 <label for="geoLocation">GeoLocation / Home Region</label>
-                                <select id="geoLocation" name="geoLocation" required>
+                                <select id="geoLocation" name="geoLocation">
+                                    <option value="">Derived from display language (default)</option>
                                     <option value="244">United States</option>
                                     <option value="242">United Kingdom</option>
                                     <option value="94">Germany</option>
@@ -157,8 +159,16 @@
                             </div>
 
                             <div class="form-group">
+                                <label for="timezoneMode">Time Zone Mode</label>
+                                <select id="timezoneMode" name="timezoneMode">
+                                    <option value="implicit">Let Windows pick it from the region (default)</option>
+                                    <option value="explicit">Set a fixed time zone</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group" id="timezoneExplicitGroup" style="display: none;">
                                 <label for="timezone">Time Zone</label>
-                                <select id="timezone" name="timezone" required>
+                                <select id="timezone" name="timezone">
                                     <option value="Pacific Standard Time">Pacific Time (US & Canada)</option>
                                     <option value="Mountain Standard Time">Mountain Time (US & Canada)</option>
                                     <option value="Central Standard Time">Central Time (US & Canada)</option>
@@ -211,15 +221,7 @@
                                 <small>Allows installation on systems with less than 64GB storage</small>
                             </div>
 
-                            <div class="form-group">
-                                <label>
-                                    <input type="checkbox" name="showPowerShell" id="showPowerShell">
-                                    Show PowerShell window during setup
-                                </label>
-                                <small>Opens PowerShell for manual intervention during installation</small>
-                            </div>
-
-                            <div class="form-group">
+                                                        <div class="form-group">
                                 <label>
                                     <input type="checkbox" name="disableNarrator" id="disableNarrator">
                                     Disable Narrator auto-start
@@ -229,18 +231,20 @@
 
                             <div class="form-group">
                                 <label>
-                                    <input type="checkbox" name="skipMachineOOBE" id="skipMachineOOBE" checked>
-                                    Skip machine OOBE (Out of Box Experience)
+                                    <input type="checkbox" name="bypassNRO" id="bypassNRO">
+                                    Bypass the network connection requirement (BypassNRO)
                                 </label>
+                                <small>Lets OOBE continue without internet and without a Microsoft account</small>
                             </div>
 
                             <div class="form-group">
                                 <label>
-                                    <input type="checkbox" name="skipUserOOBE" id="skipUserOOBE" checked>
-                                    Skip user OOBE
+                                    <input type="checkbox" name="hideOnlineAccountScreens" id="hideOnlineAccountScreens">
+                                    Hide the Microsoft account screens in OOBE
                                 </label>
                             </div>
-                        </section>
+
+                                                                                </section>
 
                         <!-- Windows Edition -->
                         <section class="form-section">
@@ -381,10 +385,12 @@
                             </div>
 
                             <div class="form-group">
-                                <label>
-                                    <input type="checkbox" name="enableAccountLockout" id="enableAccountLockout">
-                                    Enable account lockout policy
-                                </label>
+                                <label for="lockoutMode">Account Lockout</label>
+                                <select id="lockoutMode" name="lockoutMode">
+                                    <option value="default">Windows default (10 failed attempts)</option>
+                                    <option value="disabled">Disabled (never lock out)</option>
+                                    <option value="custom">Custom policy</option>
+                                </select>
                             </div>
 
                             <div id="accountLockoutGroup" style="display: none;">
@@ -469,18 +475,7 @@
                                 <small>Advanced: Write custom DiskPart commands for partition layout</small>
                             </div>
 
-                            <div class="form-group">
-                                <label>
-                                    <input type="checkbox" name="enableDiskAssertion" id="enableDiskAssertion">
-                                    Enable disk assertion (validate disk before partitioning)
-                                </label>
-                            </div>
-
-                            <div class="form-group" id="diskAssertionScriptGroup" style="display: none;">
-                                <label for="diskAssertionScript">Disk Assertion VBScript</label>
-                                <textarea id="diskAssertionScript" name="diskAssertionScript" rows="8" placeholder="' VBScript to validate disk&#10;' Example: Check minimum disk size&#10;Set objWMI = GetObject(&quot;winmgmts:&quot;)&#10;Set colDisks = objWMI.ExecQuery(&quot;SELECT * FROM Win32_DiskDrive&quot;)&#10;For Each objDisk in colDisks&#10;    If objDisk.Size < 64000000000 Then&#10;        WScript.Echo &quot;Disk too small&quot;&#10;        WScript.Quit(1)&#10;    End If&#10;Next"></textarea>
-                            </div>
-                        </section>
+                                                                                </section>
 
                     </div>
 
@@ -679,6 +674,21 @@
 
                     </div>
 
+                    <!-- TAB: REMOVE APPS -->
+                    <div class="tab-content" id="tab-remove">
+                        <section class="form-section">
+                            <h2>Remove Inbox Apps, Capabilities and Features</h2>
+                            <p class="section-description">Removed during the specialize pass, before the first logon. Apps are removed as provisioned packages, so no user ever gets them.</p>
+                            <div class="form-group">
+                                <div class="checkbox-grid" id="removalOptions"></div>
+                            </div>
+                            <div class="form-group">
+                                <button type="button" id="removeAllBtn" class="btn btn-secondary">Select all</button>
+                                <button type="button" id="removeNoneBtn" class="btn btn-secondary">Select none</button>
+                            </div>
+                        </section>
+                    </div>
+
                     <!-- TAB 5: USER INTERFACE -->
                     <div class="tab-content" id="tab-ui">
 
@@ -831,9 +841,20 @@
                             </div>
 
                             <div class="form-group">
+                                <label for="desktopIconsMode">Desktop Icons</label>
+                                <select id="desktopIconsMode" name="desktopIconsMode">
+                                    <option value="default">Windows default (Recycle Bin only)</option>
+                                    <option value="custom">Choose which icons to show</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group" id="desktopIconsCustomGroup" style="display: none;">
                                 <label>Select desktop icons to show:</label>
                                 <div class="checkbox-grid">
                                     <label><input type="checkbox" name="desktopIconThisPC" id="desktopIconThisPC"> This PC</label>
+                                    <label><input type="checkbox" name="desktopIconDesktop" id="desktopIconDesktop"> Desktop</label>
+                                    <label><input type="checkbox" name="desktopIconHome" id="desktopIconHome"> Home</label>
+                                    <label><input type="checkbox" name="desktopIconGallery" id="desktopIconGallery"> Gallery</label>
                                     <label><input type="checkbox" name="desktopIconNetwork" id="desktopIconNetwork"> Network</label>
                                     <label><input type="checkbox" name="desktopIconRecycleBin" id="desktopIconRecycleBin"> Recycle Bin</label>
                                     <label><input type="checkbox" name="desktopIconControlPanel" id="desktopIconControlPanel"> Control Panel</label>
@@ -1326,23 +1347,6 @@
                             </div>
                         </section>
 
-                        <!-- Advanced Components -->
-                        <section class="form-section">
-                            <h2>Advanced Components</h2>
-
-                            <div class="form-group">
-                                <label for="customComponents">Custom Components XML</label>
-                                <textarea id="customComponents" name="customComponents" rows="10" class="code-textarea" placeholder="<!-- Add custom XML components here -->&#10;<!-- Example: Additional registry keys, services, etc. -->"></textarea>
-                                <small>Advanced: Add custom XML components to the answer file</small>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="appLockerPolicy">AppLocker Policy XML</label>
-                                <textarea id="appLockerPolicy" name="appLockerPolicy" rows="10" class="code-textarea" placeholder="<!-- AppLocker policy XML -->&#10;<!-- Use Local Security Policy editor to create and export policy -->"></textarea>
-                                <small>Configure AppLocker application control policies</small>
-                            </div>
-                        </section>
-
                         <!-- Distribution Share -->
                         <section class="form-section">
                             <h2>Distribution Share ($OEM$ Folders)</h2>
@@ -1388,11 +1392,12 @@
     <script src="js/utils.js"></script>
     <script src="js/countries-data.js"></script>
     <script src="js/languages-data.js"></script>
+    <script src="js/script-templates.js"></script>
+    <script src="js/removal-catalog.js"></script>
     <script src="js/config-model.js"></script>
     <script src="js/state-manager.js"></script>
     <script src="js/ui-components.js"></script>
     <script src="js/validation.js"></script>
-    <script src="js/registry-generator.js"></script>
     <script src="js/xml-generator.js"></script>
     <script src="js/xml-parser.js"></script>
     <script src="js/presets.js"></script>

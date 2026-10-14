@@ -4,11 +4,51 @@
 
 class UIComponents {
     static init() {
+        if (this.initialized) return;
+        this.initialized = true;
+        this.initRemovalOptions();
         this.initTabs();
         this.initConditionalFields();
         this.initAccountsTable();
         this.initScriptTypeSelectors();
         this.initFileUploads();
+    }
+
+    /**
+     * Build the "Remove Apps" checkboxes from the removal catalog
+     */
+    static initRemovalOptions() {
+        const container = document.getElementById('removalOptions');
+        if (!container || container.children.length) return;
+        for (const option of RemovalCatalog.options) {
+            const label = document.createElement('label');
+            const input = document.createElement('input');
+            input.type = 'checkbox';
+            input.name = option.key;
+            input.id = option.key;
+            if (option.description) label.title = option.description;
+            label.appendChild(input);
+            label.appendChild(document.createTextNode(' ' + option.label));
+            container.appendChild(label);
+        }
+        const setAll = (checked) => {
+            container.querySelectorAll('input[type="checkbox"]').forEach(input => {
+                input.checked = checked;
+            });
+            container.dispatchEvent(new Event('input', { bubbles: true }));
+        };
+        document.getElementById('removeAllBtn').addEventListener('click', () => setAll(true));
+        document.getElementById('removeNoneBtn').addEventListener('click', () => setAll(false));
+    }
+
+    /**
+     * Make sure the accounts table has at least `count` rows (used when importing a configuration)
+     */
+    static ensureAccountRows(count) {
+        const addButton = document.getElementById('addAccountBtn');
+        while (document.querySelectorAll('.account-row').length < count && count <= 99) {
+            addButton.click();
+        }
     }
 
     /**
@@ -68,9 +108,21 @@ class UIComponents {
         });
 
         // Account Lockout
-        document.getElementById('enableAccountLockout').addEventListener('change', (e) => {
+        document.getElementById('lockoutMode').addEventListener('change', (e) => {
             document.getElementById('accountLockoutGroup').style.display =
-                e.target.checked ? 'block' : 'none';
+                e.target.value === 'custom' ? 'block' : 'none';
+        });
+
+        // Time Zone Mode
+        document.getElementById('timezoneMode').addEventListener('change', (e) => {
+            document.getElementById('timezoneExplicitGroup').style.display =
+                e.target.value === 'explicit' ? 'block' : 'none';
+        });
+
+        // Desktop Icons Mode
+        document.getElementById('desktopIconsMode').addEventListener('change', (e) => {
+            document.getElementById('desktopIconsCustomGroup').style.display =
+                e.target.value === 'custom' ? 'block' : 'none';
         });
 
         // Partition Mode
@@ -97,12 +149,6 @@ class UIComponents {
         document.getElementById('recoveryMode').addEventListener('change', (e) => {
             document.getElementById('recoverySizeGroup').style.display =
                 e.target.value === 'partition' ? 'block' : 'none';
-        });
-
-        // Disk Assertion
-        document.getElementById('enableDiskAssertion').addEventListener('change', (e) => {
-            document.getElementById('diskAssertionScriptGroup').style.display =
-                e.target.checked ? 'block' : 'none';
         });
 
         // Visual Effects

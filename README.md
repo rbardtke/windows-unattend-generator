@@ -4,7 +4,12 @@ A comprehensive pure HTML/JavaScript web application for generating highly custo
 
 ## Features
 
-✨ **Complete Feature Parity** with the original [schneegans.de](https://schneegans.de/windows/unattend-generator/) generator
+✨ **Same output model as the original [schneegans.de](https://schneegans.de/windows/unattend-generator/) generator.**
+All tweaks are PowerShell blocks in four embedded scripts (`Specialize.ps1`, `DefaultUser.ps1`, `UserOnce.ps1`,
+`FirstLogon.ps1`) carried in an `<Extensions>` block and extracted to `C:\Windows\Setup\Scripts` during the
+specialize pass. Settings land in the default user hive, so every account gets them, and custom scripts are
+embedded as files instead of being squeezed into a 1,024-character `CommandLine`. A real schneegans.de file
+(`test/fixtures/snoops-2024.xml`) is reproduced byte for byte by `node test/run.mjs`.
 
 ### Core Features
 - **Pure Client-Side**: No server required, runs entirely in your browser
@@ -382,3 +387,14 @@ Special thanks to Christian Schneegans for creating the original comprehensive u
 - Basic HTML/JS implementation
 - Simple form configuration
 - Limited options (25% of current features)
+
+## Testing
+
+```bash
+node test/run.mjs
+```
+
+The test feeds the options of a real schneegans.de answer file (generated April 2024, kept in
+`test/fixtures/`) into `XmlGenerator` and compares the result with that file line by line. Only the
+generator comment may differ. Importing the same file in the browser and regenerating it from the
+form gives the same result.
