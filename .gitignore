@@ -1,0 +1,4 @@
+# output of `node test/smoke.mjs` without an argument
+test/smoke-output.xml
+# working files of scripts/check-upstream.py
+upstream/

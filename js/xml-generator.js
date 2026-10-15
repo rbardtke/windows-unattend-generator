@@ -620,6 +620,15 @@ class XmlGenerator {
             this.userOnceNeedsExplorerRestart = true;
         }
 
+        if (c.themeMode === 'dark' || c.themeMode === 'light') {
+            // Also set the values in the user's own hive: Windows 11 24H2+ applies the default theme
+            // when the profile is created at first logon, which overwrites the DefaultUser values above.
+            const v = c.themeMode === 'dark' ? 0 : 1;
+            U.push(R`Set-ItemProperty -LiteralPath 'Registry::HKCU\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize' -Name 'AppsUseLightTheme' -Type 'DWord' -Value ` + v + ' -Force;' + CRLF +
+                R`Set-ItemProperty -LiteralPath 'Registry::HKCU\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize' -Name 'SystemUsesLightTheme' -Type 'DWord' -Value ` + v + ' -Force;');
+            this.userOnceNeedsExplorerRestart = true;
+        }
+
         U.push(...this.customScriptsFor('userOnce', 'userOnce'));
 
         if (this.userOnceNeedsExplorerRestart) {
