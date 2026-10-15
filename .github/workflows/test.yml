@@ -13,7 +13,9 @@ jobs:
         with:
           node-version: 22
       - name: Syntax check
-        run: for f in js/*.js; do node --check "$f"; done
+        run: |
+          for f in js/*.js; do node --check "$f"; done
+          python3 -m py_compile scripts/*.py
       - name: Generated output matches the schneegans.de reference file
         run: node test/run.mjs
       - name: Every option switched on still generates

@@ -651,11 +651,41 @@ class XmlGenerator {
         return null;
     }
 
+    /** The winget install script for the Software tab's package list. */
+    static installSoftwareScript(ids, timeoutMinutes) {
+        return [
+            '# Generated from the Software tab: install winget packages at first logon.',
+            `$timeout = [datetime]::Now.AddMinutes(${timeoutMinutes});`,
+            '$exe = "$env:LOCALAPPDATA\\Microsoft\\WindowsApps\\winget.exe";',
+            'while( -not ( Test-Path $exe ) ) {',
+            "\tif( [datetime]::Now -gt $timeout ) { 'winget did not become available; no packages installed.' | Write-Warning; return; }",
+            '\tStart-Sleep -Seconds 1;',
+            '}',
+            '$packages = @(',
+            ...ids.map((id, i) => `\t'${id.replace(/'/g, "''")}'${i < ids.length - 1 ? ',' : ''}`),
+            ');',
+            "$common = @( '--exact', '--silent', '--disable-interactivity', '--accept-package-agreements', '--accept-source-agreements', '--source', 'winget' );",
+            'foreach( $package in $packages ) {',
+            '\t"*** winget install $package";',
+            '\t& $exe install --id $package @common --scope machine;',
+            '\tif( $LASTEXITCODE -ne 0 ) {',
+            '\t\t# no machine-scope installer for this package: retry with the default scope',
+            '\t\t& $exe install --id $package @common;',
+            '\t}',
+            '}',
+        ].join(CRLF);
+    }
+
     buildFirstLogon() {
         const c = this.config;
         const F = this.firstLogon;
         if (this.accounts.some(a => a.autologon)) {
             F.push(String.raw`Set-ItemProperty -LiteralPath 'Registry::HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon' -Name 'AutoLogonCount' -Type 'DWord' -Force -Value 0;`);
+        }
+        const packages = String(c.softwarePackages || '').split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+        if (packages.length) {
+            this.addFile(`${SCRIPTS_DIR}\\InstallSoftware.ps1`, XmlGenerator.installSoftwareScript([...new Set(packages)], parseInt(c.softwareTimeout, 10) || 10));
+            F.push(this.invoke('InstallSoftware.ps1'));
         }
         if (c.cleanupWindowsOld) {
             F.push("Start-Process -FilePath 'cmd.exe' -ArgumentList '/c', 'takeown /F C:\\Windows.old /R /A /D Y & icacls C:\\Windows.old /grant Administrators:F /T & rd /s /q C:\\Windows.old' -Wait -WindowStyle 'Hidden';");

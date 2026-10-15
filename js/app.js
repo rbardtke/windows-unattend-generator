@@ -10,8 +10,9 @@ class UnattendApp {
     }
 
     init() {
-        // Initialize UI components and field validation
+        // Initialize UI components, the software tab and field validation
         UIComponents.init();
+        SoftwareTab.init();
         Validation.init(this.form);
 
         // Set up event listeners

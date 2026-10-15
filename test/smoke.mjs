@@ -49,6 +49,7 @@ Object.assign(config, {
     capsLockState: 'off', numLockState: 'on', scrollLockState: 'default',
     stickyKeysMode: 'custom',
     privacySettings: 'enable',
+    softwarePackages: '7zip.7zip\nMozilla.Firefox\nGit.Git', softwareTimeout: 5,
     systemScriptType: 'cmd', systemScript: '@echo off\r\necho system',
     userOnceScriptType: 'js', userOnceScript: 'WScript.Echo("once");',
     firstLogonScriptType: 'ps1', firstLogonScript: 'Write-Host "first"',
@@ -61,7 +62,7 @@ writeFileSync(out, xml);
 
 const files = [...xml.matchAll(/<File path="([^"]+)">/g)].map(m => m[1].split('\\').pop());
 const required = ['RemovePackage.ps1', 'RemoveCapability.ps1', 'RemoveFeature.ps1', 'SetStartPins.ps1', 'LayoutModification.xml',
-    'SetWallpaper.ps1', 'Wifi.xml', 'unattend-01.cmd', 'unattend-02.reg', 'unattend-03.js', 'unattend-04.ps1',
+    'SetWallpaper.ps1', 'Wifi.xml', 'InstallSoftware.ps1', 'unattend-01.cmd', 'unattend-02.reg', 'unattend-03.js', 'unattend-04.ps1',
     'Specialize.ps1', 'UserOnce.ps1', 'DefaultUser.ps1', 'FirstLogon.ps1'];
 const missing = required.filter(f => !files.includes(f));
 console.log(`generated ${xml.length} chars, ${files.length} embedded files, written to ${out}`);

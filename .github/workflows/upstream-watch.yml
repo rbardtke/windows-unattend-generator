@@ -1,0 +1,91 @@
+name: Upstream watch
+
+# Weekly: has schneegans.de changed what it generates, and does its removable-apps list contain
+# apps the removal catalog does not know? Opens or updates an issue with the details; never fails.
+on:
+  schedule:
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compare with schneegans.de and the Microsoft app list
+        id: check
+        run: python3 scripts/check-upstream.py
+      - name: Keep the new reference file and the diff
+        if: steps.check.outputs.changed == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: schneegans-${{ steps.check.outputs.new_hash }}
+          path: upstream/
+      - name: Push the new reference file to a branch
+        if: steps.check.outputs.changed == 'true'
+        run: |
+          git config user.name "upstream-watch"
+          git config user.email "upstream-watch@users.noreply.github.com"
+          branch="upstream/${{ steps.check.outputs.new_hash }}"
+          git checkout -B "$branch"
+          cp upstream/schneegans-current.xml test/fixtures/snoops-2026.xml
+          git add test/fixtures/snoops-2026.xml
+          git commit -m "Reference file from schneegans.de build ${{ steps.check.outputs.new_hash }}" || true
+          git push -f origin "$branch"
+      - name: Open or update the issue
+        if: steps.check.outputs.changed == 'true' || steps.check.outputs.unknown_apps != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CHANGED: ${{ steps.check.outputs.changed }}
+          OLD: ${{ steps.check.outputs.old_hash }}
+          NEW: ${{ steps.check.outputs.new_hash }}
+          LINES: ${{ steps.check.outputs.changed_lines }}
+          APPS: ${{ steps.check.outputs.unknown_apps }}
+          RETIRED: ${{ steps.check.outputs.retired_selectors }}
+        run: |
+          title="Upstream watch: $(date -u +%Y-%m-%d)"
+          {
+            echo "Automated weekly check of the sources this generator mirrors."
+            echo
+            if [ "$CHANGED" = "true" ]; then
+              echo "## schneegans.de changed its output"
+              echo
+              echo "- changed lines: $LINES"
+              echo "- build: \`$OLD\` -> \`$NEW\` (upstream commits: https://github.com/cschneegans/unattend-generator/compare/$OLD...$NEW)"
+              echo "- new reference file on branch \`upstream/$NEW\`; running \`node test/run.mjs\` there shows what to adapt"
+              echo "- the diff is attached to the workflow run as an artifact"
+              echo
+              echo '```diff'
+              head -c 60000 upstream/schneegans.diff
+              echo '```'
+            else
+              echo "schneegans.de output is unchanged (build \`$NEW\`)."
+            fi
+            echo
+            if [ -n "$APPS" ]; then
+              echo "## Removable apps schneegans lists that the removal catalog does not know"
+              echo
+              printf '%b' "$APPS" | sed 's/^/- /'
+              echo
+              echo
+              echo "Source: https://github.com/cschneegans/unattend-generator/blob/master/resource/Bloatware.json"
+            fi
+            if [ -n "$RETIRED" ]; then
+              echo
+              echo "Catalog selectors upstream no longer lists: $RETIRED"
+            fi
+          } > body.md
+          existing=$(gh issue list --label upstream-watch --state open --json number --jq '.[0].number')
+          if [ -n "$existing" ]; then
+            gh issue edit "$existing" --title "$title" --body-file body.md
+          else
+            gh label create upstream-watch --description "Automated upstream checks" --color 0e8a16 2>/dev/null || true
+            gh issue create --title "$title" --label upstream-watch --body-file body.md
+          fi

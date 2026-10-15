@@ -37,6 +37,7 @@
                 <button class="tab-btn" data-tab="disk">Disk Configuration</button>
                 <button class="tab-btn" data-tab="system">System Configuration</button>
                 <button class="tab-btn" data-tab="remove">Remove Apps</button>
+                <button class="tab-btn" data-tab="software">Software</button>
                 <button class="tab-btn" data-tab="ui">User Interface</button>
                 <button class="tab-btn" data-tab="appearance">Appearance</button>
                 <button class="tab-btn" data-tab="network">Network & Tools</button>
@@ -687,6 +688,40 @@
                             <div class="form-group">
                                 <button type="button" id="removeAllBtn" class="btn btn-secondary">Select all</button>
                                 <button type="button" id="removeNoneBtn" class="btn btn-secondary">Select none</button>
+                            </div>
+                        </section>
+                    </div>
+
+                    <!-- TAB: SOFTWARE -->
+                    <div class="tab-content" id="tab-software">
+                        <section class="form-section">
+                            <h2>Software to Install</h2>
+                            <p class="section-description">Installed with winget at the first logon of the auto-logon account, after the desktop appears. Each package is tried with machine scope first and again with the default scope if that fails. The catalog is rebuilt weekly from the official winget source.</p>
+
+                            <div class="form-group">
+                                <label for="softwareSearch">Search the winget catalog</label>
+                                <input type="text" id="softwareSearch" placeholder="firefox, 7zip.7zip, vscode …" autocomplete="off">
+                                <small id="softwareStatus">Catalog loads when you start typing.</small>
+                            </div>
+                            <div id="softwareResults" class="software-results"></div>
+
+                            <div class="form-group">
+                                <label>Packages to install</label>
+                                <div id="softwareList" class="software-list"></div>
+                                <textarea id="softwarePackages" name="softwarePackages" rows="3" hidden></textarea>
+                                <button type="button" id="softwareClearBtn" class="btn btn-secondary btn-small">Remove all</button>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="softwareTimeout">Wait for winget up to (minutes)</label>
+                                <input type="number" id="softwareTimeout" name="softwareTimeout" min="1" max="60" value="10">
+                                <small>On a fresh install winget can take a few minutes to register. The script waits this long before giving up.</small>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="softwareImport">Add from an existing machine</label>
+                                <textarea id="softwareImport" rows="4" placeholder="Paste the output of:  winget export -o list.json   (or package ids, one per line)"></textarea>
+                                <button type="button" id="softwareImportBtn" class="btn btn-secondary btn-small">Add these packages</button>
                             </div>
                         </section>
                     </div>
@@ -1411,7 +1446,9 @@
     <script src="js/removal-catalog.js"></script>
     <script src="js/config-model.js"></script>
     <script src="js/state-manager.js"></script>
+    <script src="js/snippets.js"></script>
     <script src="js/code-editor.js"></script>
+    <script src="js/software.js"></script>
     <script src="js/ui-components.js"></script>
     <script src="js/validation.js"></script>
     <script src="js/xml-generator.js"></script>

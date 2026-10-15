@@ -109,8 +109,49 @@ class UIComponents {
         container.appendChild(row);
 
         CodeEditor.enhance(textarea, select.value);
+        this.addSnippetPicker(textarea, select);
         select.addEventListener('change', () => CodeEditor.setLanguage(textarea, select.value || 'ps1'));
         return row;
+    }
+
+    /**
+     * A "Insert snippet" select above a script box; the snippet goes in at the cursor.
+     * If the box has no type yet, it becomes a PowerShell box.
+     */
+    static addSnippetPicker(textarea, typeSelect) {
+        if (typeof Snippets === 'undefined' || !textarea) return;
+        const picker = document.createElement('select');
+        picker.className = 'snippet-picker';
+        picker.setAttribute('aria-label', 'Insert snippet');
+        const first = document.createElement('option');
+        first.value = '';
+        first.textContent = 'Insert snippet…';
+        picker.appendChild(first);
+        for (const snippet of Snippets) {
+            const option = document.createElement('option');
+            option.value = snippet.id;
+            option.textContent = snippet.title;
+            picker.appendChild(option);
+        }
+        picker.addEventListener('change', () => {
+            const snippet = Snippets.find(s => s.id === picker.value);
+            picker.value = '';
+            if (!snippet) return;
+            if (typeSelect && !typeSelect.value) {
+                typeSelect.value = 'ps1';
+                typeSelect.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const before = textarea.value.slice(0, start);
+            const needsNewline = before.length && !before.endsWith('\n');
+            const text = (needsNewline ? '\n' : '') + snippet.body + '\n';
+            textarea.setRangeText(text, start, end, 'end');
+            textarea.focus();
+            textarea.dispatchEvent(new Event('input', { bubbles: true }));
+        });
+        const wrapper = textarea.closest('.code-editor') || textarea;
+        wrapper.parentNode.insertBefore(picker, wrapper);
     }
 
     static renumberScriptRows(phase) {
@@ -393,6 +434,7 @@ class UIComponents {
             const group = document.getElementById(`${phase}ScriptGroup`);
             const textarea = group.querySelector('textarea');
             CodeEditor.enhance(textarea, selector.value || 'ps1');
+            this.addSnippetPicker(textarea, selector);
 
             selector.addEventListener('change', (e) => {
                 group.style.display = e.target.value ? 'block' : 'none';

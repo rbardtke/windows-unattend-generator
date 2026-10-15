@@ -24,6 +24,9 @@ in October 2026 (`test/fixtures/snoops-2026.xml`) is reproduced byte for byte by
 - **Auto-Save**: Configuration automatically saved to localStorage
 - **No Dependencies**: Pure vanilla JavaScript, no frameworks needed
 - **Syntax Highlighting**: Built-in highlighter for PowerShell, batch, .reg, VBScript and JScript in every script box
+- **Snippets**: ready-made script pieces (silent installers, winget lists, Windows features, VS Code extensions, scheduled tasks, ...) inserted at the cursor
+- **Software tab**: search the winget catalog (15,000+ packages, rebuilt weekly from the official winget source by a GitHub Action) and pick what to install at first logon; paste a `winget export` to copy an existing machine
+- **Upstream watch**: a weekly GitHub Action regenerates the reference file on schneegans.de, diffs it, and opens an issue with the changes and any removable apps the catalog does not know yet
 - **Responsive Design**: Works on desktop, tablet, and mobile devices
 - **Dark Mode**: Automatic dark mode based on system preferences
 

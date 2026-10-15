@@ -208,6 +208,10 @@ const ConfigModel = {
             // Privacy
             privacySettings: 'interactive',
 
+            // Software (winget package ids, one per line)
+            softwarePackages: '',
+            softwareTimeout: 10,
+
             // Scripts
             systemScriptType: '',
             systemScript: '',
