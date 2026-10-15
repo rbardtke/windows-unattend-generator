@@ -83,14 +83,15 @@ const CONTENT_DELIVERY_NAMES = [
     'ContentDeliveryAllowed', 'FeatureManagementEnabled', 'OEMPreInstalledAppsEnabled', 'PreInstalledAppsEnabled',
     'PreInstalledAppsEverEnabled', 'SilentInstalledAppsEnabled', 'SoftLandingEnabled', 'SubscribedContentEnabled',
     'SubscribedContent-310093Enabled', 'SubscribedContent-338387Enabled', 'SubscribedContent-338388Enabled',
-    'SubscribedContent-338389Enabled', 'SubscribedContent-338393Enabled', 'SubscribedContent-353698Enabled',
-    'SystemPaneSuggestionsEnabled',
+    'SubscribedContent-338389Enabled', 'SubscribedContent-338393Enabled', 'SubscribedContent-353694Enabled',
+    'SubscribedContent-353696Enabled', 'SubscribedContent-353698Enabled', 'SystemPaneSuggestionsEnabled',
 ];
 
 class XmlGenerator {
-    constructor(config) {
+    constructor(config, options) {
         const defaults = (typeof ConfigModel !== 'undefined') ? ConfigModel.getDefaults() : {};
         this.config = Object.assign(defaults, config || {});
+        this.options = options || {};
         this.accounts = this.collectAccounts();
         this.files = [];
         this.specialize = [];
@@ -108,7 +109,7 @@ class XmlGenerator {
             .replace(/&/g, '&amp;')
             .replace(/</g, '&lt;')
             .replace(/>/g, '&gt;')
-            .replace(/[^\x00-\x7f]/g, ch => '&#x' + ch.codePointAt(0).toString(16) + ';');
+            .replace(/[^\x00-\x7f]/g, ch => '&#x' + ch.codePointAt(0).toString(16).toUpperCase() + ';');
     }
 
     static escapeAttr(value) {
@@ -160,7 +161,28 @@ class XmlGenerator {
     }
 
     invoke(fileName) {
-        return `Get-Content -LiteralPath '${SCRIPTS_DIR}\\${fileName}' -Raw | Invoke-Expression;`;
+        return `& '${SCRIPTS_DIR}\\${fileName}';`;
+    }
+
+    /** Command line that runs an embedded script file (specialize pass, RunOnce, first logon). */
+    static runScriptCommand(fileName, forRegValue) {
+        const q = forRegValue ? '\\""' : '"';
+        return `powershell.exe -WindowStyle ${q}Normal${q} -ExecutionPolicy ${q}Unrestricted${q} -NoProfile -File ${q}${SCRIPTS_DIR}\\${fileName}${q}`;
+    }
+
+    /** All custom scripts of a phase: <prefix>Script / <prefix>ScriptType, then <prefix>Script_2 ... */
+    customScriptsFor(prefix, phase) {
+        const c = this.config;
+        const blocks = [];
+        for (let i = 1; i <= 50; i++) {
+            const suffix = i === 1 ? '' : `_${i}`;
+            const type = c[`${prefix}ScriptType${suffix}`];
+            const content = c[`${prefix}Script${suffix}`];
+            if (i > 1 && type === undefined && content === undefined) break;
+            const block = this.customScript(type, content, phase);
+            if (block) blocks.push(block);
+        }
+        return blocks;
     }
 
     /** Embed a user script for a phase and return the block that runs it. */
@@ -193,14 +215,20 @@ class XmlGenerator {
         lines.push(');');
         lines.push('');
         lines.push('& {');
-        lines.push('\t[float] $complete = 0;');
-        lines.push('\t[float] $increment = 100 / $scripts.Count;');
-        lines.push('\tforeach( $script in $scripts ) {');
-        lines.push(`\t\tWrite-Progress -Activity '${activity}' -PercentComplete $complete;`);
-        lines.push('\t\t& $script;');
-        lines.push('\t\t$complete += $increment;');
-        lines.push('\t}');
-        lines.push(`} *>&1 >> "${logFile}";`);
+        lines.push('  [float] $complete = 0;');
+        lines.push('  [float] $increment = 100 / $scripts.Count;');
+        lines.push('  foreach( $script in $scripts ) {');
+        lines.push(`    Write-Progress -Id 0 -Activity '${activity}' -PercentComplete $complete;`);
+        lines.push("    '*** Will now execute command «{0}».' -f $(");
+        lines.push("      $script.ToString().Trim() -replace '\\s+', ' ' -replace '^(.{99})(.+)$', '$1…';");
+        lines.push('    );');
+        lines.push('    $start = [datetime]::Now;');
+        lines.push('    & $script;');
+        lines.push("    '*** Finished executing command after {0:0} ms.' -f [datetime]::Now.Subtract( $start ).TotalMilliseconds;");
+        lines.push('    "`r`n" * 3;');
+        lines.push('    $complete += $increment;');
+        lines.push('  }');
+        lines.push(`} *>&1 | Out-String -Width 1KB -Stream >> "${logFile}";`);
         return lines.join(CRLF);
     }
 
@@ -240,7 +268,7 @@ class XmlGenerator {
         this.buildFirstLogon();
 
         if (this.userOnce.length) {
-            this.defaultUser.push(String.raw`reg.exe add "HKU\DefaultUser\Software\Microsoft\Windows\CurrentVersion\RunOnce" /v "UnattendedSetup" /t REG_SZ /d "powershell.exe -NoProfile -Command \""Get-Content -LiteralPath 'C:\Windows\Setup\Scripts\UserOnce.ps1' -Raw | Invoke-Expression;\""" /f;`);
+            this.defaultUser.push(String.raw`reg.exe add "HKU\DefaultUser\Software\Microsoft\Windows\CurrentVersion\RunOnce" /v "UnattendedSetup" /t REG_SZ /d "` + XmlGenerator.runScriptCommand('UserOnce.ps1', true) + '" /f;');
         }
 
         if (this.specialize.length) {
@@ -277,24 +305,30 @@ class XmlGenerator {
         }
 
         if (c.removeDevHome) S.push(R`Remove-Item -LiteralPath 'Registry::HKLM\Software\Microsoft\WindowsUpdate\Orchestrator\UScheduler_Oobe\DevHomeUpdate' -Force -ErrorAction 'SilentlyContinue';`);
-        if (c.removeOneDrive) S.push(R`Remove-Item -LiteralPath 'C:\Users\Default\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\OneDrive.lnk', 'C:\Windows\System32\OneDriveSetup.exe', 'C:\Windows\SysWOW64\OneDriveSetup.exe' -ErrorAction 'Continue';`);
+        if (c.removeOneDrive) {
+            S.push('@(' + CRLF +
+                R`  'C:\Users\Default\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\OneDrive.lnk';` + CRLF +
+                R`  'C:\Windows\System32\OneDriveSetup.exe';` + CRLF +
+                R`  'C:\Windows\SysWOW64\OneDriveSetup.exe';` + CRLF +
+                R`) | Where-Object -FilterScript { [System.IO.File]::Exists( $_ ); } | Remove-Item -Verbose -ErrorAction 'Continue';`);
+        }
         if (c.removeOutlook) S.push(R`Remove-Item -LiteralPath 'Registry::HKLM\Software\Microsoft\WindowsUpdate\Orchestrator\UScheduler_Oobe\OutlookUpdate' -Force -ErrorAction 'SilentlyContinue';`);
         if (c.removeTeams) S.push(R`reg.exe add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Communications" /v ConfigureChatAutoInstall /t REG_DWORD /d 0 /f;`);
 
         const packages = RemovalCatalog.selectors(c, 'packages');
         if (packages.length) {
-            this.addFile(`${SCRIPTS_DIR}\\RemovePackages.ps1`, ScriptTemplates.removePackages.replace('__SELECTORS__', XmlGenerator.selectorList(packages)));
-            S.push(this.invoke('RemovePackages.ps1'));
+            this.addFile(`${SCRIPTS_DIR}\\RemovePackage.ps1`, ScriptTemplates.removePackages.replace('__SELECTORS__', XmlGenerator.selectorList(packages)));
+            S.push(this.invoke('RemovePackage.ps1'));
         }
         const capabilities = RemovalCatalog.selectors(c, 'capabilities');
         if (capabilities.length) {
-            this.addFile(`${SCRIPTS_DIR}\\RemoveCapabilities.ps1`, ScriptTemplates.removeCapabilities.replace('__SELECTORS__', XmlGenerator.selectorList(capabilities)));
-            S.push(this.invoke('RemoveCapabilities.ps1'));
+            this.addFile(`${SCRIPTS_DIR}\\RemoveCapability.ps1`, ScriptTemplates.removeCapabilities.replace('__SELECTORS__', XmlGenerator.selectorList(capabilities)));
+            S.push(this.invoke('RemoveCapability.ps1'));
         }
         const features = RemovalCatalog.selectors(c, 'features');
         if (features.length) {
-            this.addFile(`${SCRIPTS_DIR}\\RemoveFeatures.ps1`, ScriptTemplates.removeFeatures.replace('__SELECTORS__', XmlGenerator.selectorList(features)));
-            S.push(this.invoke('RemoveFeatures.ps1'));
+            this.addFile(`${SCRIPTS_DIR}\\RemoveFeature.ps1`, ScriptTemplates.removeFeatures.replace('__SELECTORS__', XmlGenerator.selectorList(features)));
+            S.push(this.invoke('RemoveFeature.ps1'));
         }
         if (c.removeEdge) {
             S.push('$setup = Get-ChildItem -Path "${env:ProgramFiles(x86)}\\Microsoft\\Edge\\Application\\*\\Installer\\setup.exe" -ErrorAction \'SilentlyContinue\' | Select-Object -First 1;' + CRLF +
@@ -316,10 +350,10 @@ class XmlGenerator {
 
         if (c.disableFastStartup) S.push(R`reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Power" /v HiberbootEnabled /t REG_DWORD /d 0 /f;`);
         if (c.taskbarHideWidgets) S.push(R`reg.exe add "HKLM\SOFTWARE\Policies\Microsoft\Dsh" /v AllowNewsAndInterests /t REG_DWORD /d 0 /f;`);
-        if (c.disableAppSuggestions) S.push(R`reg.exe add "HKLM\Software\Policies\Microsoft\Windows\CloudContent" /v "DisableWindowsConsumerFeatures" /t REG_DWORD /d 0 /f;`);
+        if (c.disableAppSuggestions) S.push(R`reg.exe add "HKLM\Software\Policies\Microsoft\Windows\CloudContent" /v "DisableWindowsConsumerFeatures" /t REG_DWORD /d 1 /f;`);
         if (c.disableDeviceEncryption) S.push(R`reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\BitLocker" /v "PreventDeviceEncryption" /t REG_DWORD /d 1 /f;`);
-        if (c.disableEdgeFirstRun) S.push(R`reg.exe add "HKLM\SOFTWARE\Policies\Microsoft\Edge" /v HideFirstRunExperience /t REG_DWORD /d 1 /f;`);
-        if (c.disableEdgeStartupBoost) S.push(R`reg.exe add "HKLM\SOFTWARE\Policies\Microsoft\Edge" /v StartupBoostEnabled /t REG_DWORD /d 0 /f;`);
+        if (c.disableEdgeFirstRun) S.push(R`reg.exe add "HKLM\Software\Policies\Microsoft\Edge" /v HideFirstRunExperience /t REG_DWORD /d 1 /f;`);
+        if (c.disableEdgeStartupBoost) S.push(R`reg.exe add "HKLM\Software\Policies\Microsoft\Edge" /v StartupBoostEnabled /t REG_DWORD /d 0 /f;`);
 
         if (c.startPinsWin11 === 'none' || (c.startPinsWin11 === 'custom' && c.startPinsWin11JSON && c.startPinsWin11JSON.trim())) {
             const json = c.startPinsWin11 === 'none' ? '{"pinnedList":[]}' : c.startPinsWin11JSON.trim().replace(/'/g, "''");
@@ -391,8 +425,7 @@ class XmlGenerator {
         this.buildWifi();
         this.buildVmTools();
 
-        const custom = this.customScript(c.systemScriptType, c.systemScript, 'specialize');
-        if (custom) S.push(custom);
+        S.push(...this.customScriptsFor('system', 'specialize'));
     }
 
     buildWifi() {
@@ -533,8 +566,7 @@ class XmlGenerator {
                 R`reg.exe add "HKU\DefaultUser\AppEvents\Schemes" /ve /t REG_SZ /d ".None" /f;`);
         }
 
-        const custom = this.customScript(c.defaultUserScriptType, c.defaultUserScript, 'defaultUser');
-        if (custom) D.push(custom);
+        D.push(...this.customScriptsFor('defaultUser', 'defaultUser'));
     }
 
     buildUserOnce() {
@@ -588,8 +620,7 @@ class XmlGenerator {
             this.userOnceNeedsExplorerRestart = true;
         }
 
-        const custom = this.customScript(c.userOnceScriptType, c.userOnceScript, 'userOnce');
-        if (custom) U.push(custom);
+        U.push(...this.customScriptsFor('userOnce', 'userOnce'));
 
         if (this.userOnceNeedsExplorerRestart) {
             U.push("Get-Process -Name 'explorer' -ErrorAction 'SilentlyContinue' | Where-Object -FilterScript {" + CRLF +
@@ -629,8 +660,13 @@ class XmlGenerator {
         if (c.cleanupWindowsOld) {
             F.push("Start-Process -FilePath 'cmd.exe' -ArgumentList '/c', 'takeown /F C:\\Windows.old /R /A /D Y & icacls C:\\Windows.old /grant Administrators:F /T & rd /s /q C:\\Windows.old' -Wait -WindowStyle 'Hidden';");
         }
-        const custom = this.customScript(c.firstLogonScriptType, c.firstLogonScript, 'firstLogon');
-        if (custom) F.push(custom);
+        F.push(...this.customScriptsFor('firstLogon', 'firstLogon'));
+        // Remove the answer file (it may hold plaintext passwords and Wi-Fi keys) and the Wi-Fi profile
+        F.push('Remove-Item -LiteralPath @(' + CRLF +
+            "  'C:\\Windows\\Panther\\unattend.xml';" + CRLF +
+            "  'C:\\Windows\\Panther\\unattend-original.xml';" + CRLF +
+            "  'C:\\Windows\\Setup\\Scripts\\Wifi.xml';" + CRLF +
+            ") -Force -ErrorAction 'SilentlyContinue' -Verbose;");
     }
 
     /* -------------------------------------------------------------------- xml */
@@ -648,7 +684,9 @@ class XmlGenerator {
         const L = [];
         L.push('<?xml version="1.0" encoding="utf-8"?>');
         L.push('<unattend xmlns="urn:schemas-microsoft-com:unattend" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State">');
-        L.push('\t<!--Generated with Windows Unattend Generator (https://github.com/rbardtke/windows-unattend-generator)-->');
+        // The comment carries a link that reopens this configuration in the generator (XML comments may not contain "--")
+        const link = this.options.link ? String(this.options.link).replace(/--/g, '%2D%2D') : 'https://github.com/rbardtke/windows-unattend-generator';
+        L.push(`\t<!--${link}-->`);
         L.push('\t<settings pass="offlineServicing"></settings>');
         L.push('\t<settings pass="windowsPE">');
         this.forEachArch(L, (buffer, arch) => this.windowsPEComponents(buffer, arch));
@@ -716,14 +754,7 @@ class XmlGenerator {
         const lang = c.language || 'en-US';
         const keyboard = c.keyboard || '0409:00000409';
         L.push(XmlGenerator.component('Microsoft-Windows-International-Core-WinPE', arch));
-        L.push('\t\t\t<SetupUILanguage>');
-        L.push(`\t\t\t\t<UILanguage>${lang}</UILanguage>`);
-        L.push('\t\t\t</SetupUILanguage>');
-        L.push(`\t\t\t<InputLocale>${keyboard}</InputLocale>`);
-        L.push(`\t\t\t<SystemLocale>${lang}</SystemLocale>`);
         L.push(`\t\t\t<UILanguage>${lang}</UILanguage>`);
-        if (c.languageSecondary || c.languageTertiary) L.push('\t\t\t<UILanguageFallback>en-US</UILanguageFallback>');
-        L.push(`\t\t\t<UserLocale>${lang}</UserLocale>`);
         L.push('\t\t</component>');
 
         L.push(XmlGenerator.component('Microsoft-Windows-Setup', arch));
@@ -778,6 +809,7 @@ class XmlGenerator {
         if (key) {
             L.push('\t\t\t\t<ProductKey>');
             L.push(`\t\t\t\t\t<Key>${XmlGenerator.escapeXml(key)}</Key>`);
+            L.push('\t\t\t\t\t<WillShowUI>OnError</WillShowUI>');
             L.push('\t\t\t\t</ProductKey>');
         }
         L.push('\t\t\t\t<AcceptEula>true</AcceptEula>');
@@ -848,12 +880,12 @@ class XmlGenerator {
 
         const commands = [];
         if (this.files.length) {
-            commands.push(`powershell.exe -NoProfile -Command "$xml = [xml]::new(); $xml.Load('C:\\Windows\\Panther\\unattend.xml'); $sb = [scriptblock]::Create( $xml.unattend.Extensions.ExtractScript ); Invoke-Command -ScriptBlock $sb -ArgumentList $xml;"`);
+            commands.push(`powershell.exe -WindowStyle "Normal" -NoProfile -Command "$xml = [xml]::new(); $xml.Load('C:\\Windows\\Panther\\unattend.xml'); $sb = [scriptblock]::Create( $xml.unattend.Extensions.ExtractScript ); Invoke-Command -ScriptBlock $sb -ArgumentList $xml;"`);
         }
-        if (this.specialize.length) commands.push(`powershell.exe -NoProfile -Command "${this.invoke('Specialize.ps1')}"`);
+        if (this.specialize.length) commands.push(XmlGenerator.runScriptCommand('Specialize.ps1'));
         if (this.defaultUser.length) {
             commands.push('reg.exe load "HKU\\DefaultUser" "C:\\Users\\Default\\NTUSER.DAT"');
-            commands.push(`powershell.exe -NoProfile -Command "${this.invoke('DefaultUser.ps1')}"`);
+            commands.push(XmlGenerator.runScriptCommand('DefaultUser.ps1'));
             commands.push('reg.exe unload "HKU\\DefaultUser"');
         }
         if (commands.length) {
@@ -931,7 +963,7 @@ class XmlGenerator {
             L.push('\t\t\t<FirstLogonCommands>');
             L.push('\t\t\t\t<SynchronousCommand wcm:action="add">');
             L.push('\t\t\t\t\t<Order>1</Order>');
-            L.push(`\t\t\t\t\t<CommandLine>${XmlGenerator.escapeXml(`powershell.exe -NoProfile -Command "${this.invoke('FirstLogon.ps1')}"`)}</CommandLine>`);
+            L.push(`\t\t\t\t\t<CommandLine>${XmlGenerator.escapeXml(XmlGenerator.runScriptCommand('FirstLogon.ps1'))}</CommandLine>`);
             L.push('\t\t\t\t</SynchronousCommand>');
             L.push('\t\t\t</FirstLogonCommands>');
         }

@@ -18,6 +18,7 @@
             <button id="importBtn" class="btn btn-secondary">Import (XML/JSON)</button>
             <button id="exportBtn" class="btn btn-primary">Generate & Download</button>
             <button id="saveConfigBtn" class="btn btn-secondary">Save Config (JSON)</button>
+            <button id="bookmarkBtn" class="btn btn-secondary" title="Copies a link that reopens this configuration">Copy link to this config</button>
             <select id="presetSelector" class="preset-selector">
                 <option value="">-- Select Preset --</option>
                 <option value="minimal">Minimal Configuration</option>
@@ -362,6 +363,7 @@
                                     </table>
                                     <button type="button" id="addAccountBtn" class="btn btn-secondary">Add Account</button>
                                     <small>You can add up to 99 user accounts</small>
+                                    <small class="warning">Passwords are written into autounattend.xml in plain text. The generated file deletes itself from C:\Windows\Panther at the first logon, but anyone with the install media can read it.</small>
                                 </div>
                             </div>
                         </section>
@@ -1086,6 +1088,7 @@
                                 <div class="form-group" id="wifiPasswordGroup" style="display: none;">
                                     <label for="wifiPassword">Wi-Fi Password</label>
                                     <input type="password" id="wifiPassword" name="wifiPassword">
+                                    <small class="warning">Stored in plain text in the answer file (the Wi-Fi profile is deleted from the installed system at first logon).</small>
                                 </div>
 
                                 <div class="form-group">
@@ -1275,6 +1278,9 @@
                                     <label for="systemScript">Script Content</label>
                                     <textarea id="systemScript" name="systemScript" rows="10" class="code-textarea"></textarea>
                                 </div>
+
+                                <div class="extra-scripts" id="systemExtraScripts"></div>
+                                <button type="button" class="btn btn-secondary btn-small add-script" data-phase="system">Add another script</button>
                             </div>
 
                             <!-- UserOnce Phase -->
@@ -1298,6 +1304,9 @@
                                     <label for="userOnceScript">Script Content</label>
                                     <textarea id="userOnceScript" name="userOnceScript" rows="10" class="code-textarea"></textarea>
                                 </div>
+
+                                <div class="extra-scripts" id="userOnceExtraScripts"></div>
+                                <button type="button" class="btn btn-secondary btn-small add-script" data-phase="userOnce">Add another script</button>
                             </div>
 
                             <!-- FirstLogon Phase -->
@@ -1321,6 +1330,9 @@
                                     <label for="firstLogonScript">Script Content</label>
                                     <textarea id="firstLogonScript" name="firstLogonScript" rows="10" class="code-textarea"></textarea>
                                 </div>
+
+                                <div class="extra-scripts" id="firstLogonExtraScripts"></div>
+                                <button type="button" class="btn btn-secondary btn-small add-script" data-phase="firstLogon">Add another script</button>
                             </div>
 
                             <!-- DefaultUser Phase -->
@@ -1344,6 +1356,9 @@
                                     <label for="defaultUserScript">Script Content</label>
                                     <textarea id="defaultUserScript" name="defaultUserScript" rows="10" class="code-textarea"></textarea>
                                 </div>
+
+                                <div class="extra-scripts" id="defaultUserExtraScripts"></div>
+                                <button type="button" class="btn btn-secondary btn-small add-script" data-phase="defaultUser">Add another script</button>
                             </div>
                         </section>
 

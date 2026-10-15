@@ -10,14 +10,18 @@ class UnattendApp {
     }
 
     init() {
-        // Initialize UI components
+        // Initialize UI components and field validation
         UIComponents.init();
+        Validation.init(this.form);
 
         // Set up event listeners
         this.setupEventListeners();
 
-        // Load saved state if available
-        this.loadState();
+        // A #config= link wins over the saved state
+        if (!this.applyFromHash()) {
+            this.loadState();
+        }
+        window.addEventListener('hashchange', () => this.applyFromHash());
 
         // Generate initial preview
         this.updatePreview();
@@ -39,6 +43,11 @@ class UnattendApp {
         // Save config as JSON
         document.getElementById('saveConfigBtn').addEventListener('click', () => {
             this.saveConfigToFile();
+        });
+
+        // Copy a link to this configuration
+        document.getElementById('bookmarkBtn').addEventListener('click', () => {
+            this.copyBookmark();
         });
 
         // File input change
@@ -93,7 +102,7 @@ class UnattendApp {
     updatePreview() {
         try {
             const config = this.getFormData();
-            const generator = new XmlGenerator(config);
+            const generator = new XmlGenerator(config, { link: this.shareLink(config) });
             const xml = generator.generate();
 
             const preview = document.getElementById('xmlPreview');
@@ -138,7 +147,7 @@ class UnattendApp {
     generateAndDownload() {
         try {
             const config = this.getFormData();
-            const generator = new XmlGenerator(config);
+            const generator = new XmlGenerator(config, { link: this.shareLink(config) });
             const xml = generator.generate();
 
             // Debug: Check for extra characters
@@ -181,7 +190,7 @@ class UnattendApp {
         try {
             if (extension === 'json') {
                 const config = await StateManager.importConfig(file);
-                this.applyConfig(config);
+                this.resetAndApply(config);
                 this.showNotification('Configuration imported from JSON', 'success');
             } else if (extension === 'xml') {
                 // Read XML file
@@ -193,11 +202,7 @@ class UnattendApp {
 
                 console.log('Parsed configuration from XML:', config);
 
-                // Start from the defaults so options absent from the file are reset, then apply
-                this.applyConfig(ConfigModel.getDefaults());
-                const accountCount = Object.keys(config).filter(k => /^account_\d+_username$/.test(k)).length;
-                UIComponents.ensureAccountRows(accountCount);
-                this.applyConfig(config);
+                this.resetAndApply(config);
                 this.showNotification('Configuration imported from XML', 'success');
             } else {
                 this.showNotification('Unsupported file type. Use .json or .xml', 'error');
@@ -207,6 +212,69 @@ class UnattendApp {
         } catch (error) {
             console.error('Import failed:', error);
             this.showNotification(`Import failed: ${error.message}`, 'error');
+        }
+    }
+
+    /**
+     * Reset the form to the defaults, create the rows a configuration needs, then apply it
+     */
+    resetAndApply(config) {
+        this.applyConfig(ConfigModel.getDefaults());
+        UIComponents.ensureAccountRows(Object.keys(config).filter(k => /^account_\d+_username$/.test(k)).length);
+        for (const phase of ['system', 'userOnce', 'firstLogon', 'defaultUser']) {
+            const indexes = Object.keys(config).map(k => new RegExp(`^${phase}ScriptType_(\\d+)$`).exec(k)).filter(Boolean).map(m => Number(m[1]));
+            if (indexes.length) UIComponents.ensureScriptRows(phase, Math.max(...indexes));
+        }
+        this.applyConfig(config);
+        CodeEditor.refreshAll();
+    }
+
+    /**
+     * Link that reopens the current configuration (non-default values only, images left out)
+     */
+    shareLink(config) {
+        const defaults = ConfigModel.getDefaults();
+        const diff = {};
+        for (const [key, value] of Object.entries(config)) {
+            if (key.endsWith('_base64')) continue;
+            if (defaults[key] === undefined ? (value !== '' && value !== false) : String(defaults[key]) !== String(value)) diff[key] = value;
+        }
+        const json = JSON.stringify(diff);
+        const base64 = btoa(unescape(encodeURIComponent(json)));
+        return `${location.origin}${location.pathname}#config=${base64}`;
+    }
+
+    /**
+     * Decode a #config= link; returns null when the hash holds none
+     */
+    static configFromHash(hash) {
+        const m = /^#config=([A-Za-z0-9+/=]+)$/.exec(hash || '');
+        if (!m) return null;
+        try {
+            return JSON.parse(decodeURIComponent(escape(atob(m[1]))));
+        } catch (e) {
+            console.error('Could not decode the configuration link:', e);
+            return null;
+        }
+    }
+
+    applyFromHash() {
+        const config = UnattendApp.configFromHash(location.hash);
+        if (!config) return false;
+        this.resetAndApply(config);
+        this.updatePreview();
+        this.showNotification('Configuration loaded from the link', 'success');
+        return true;
+    }
+
+    copyBookmark() {
+        const link = this.shareLink(this.getFormData());
+        history.replaceState(null, '', link.slice(link.indexOf('#')));
+        const done = () => this.showNotification('Link copied to the clipboard', 'success');
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(link).then(done, () => prompt('Copy this link:', link));
+        } else {
+            prompt('Copy this link:', link);
         }
     }
 

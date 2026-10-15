@@ -85,7 +85,8 @@ const Validation = {
         }
 
         const value = field.value.trim();
-        const fieldName = field.name;
+        // account_N_username / account_N_password share the username / password rules
+        const fieldName = field.name.replace(/^account_\d+_/, '');
 
         // Remove previous error messages
         const existingError = field.parentElement.querySelector('.error-message');
@@ -110,15 +111,6 @@ const Validation = {
             const rule = this.rules[fieldName];
             if (!rule.pattern.test(value)) {
                 this.markInvalid(field, rule.message);
-                return false;
-            }
-        }
-
-        // Special validations
-        if (fieldName === 'password') {
-            // Password can be empty, but if provided should meet minimum criteria
-            if (value && value.length < 4) {
-                this.markInvalid(field, 'Password should be at least 4 characters');
                 return false;
             }
         }

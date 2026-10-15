@@ -6,12 +6,128 @@ class UIComponents {
     static init() {
         if (this.initialized) return;
         this.initialized = true;
+        this.initDataLists();
         this.initRemovalOptions();
         this.initTabs();
         this.initConditionalFields();
         this.initAccountsTable();
         this.initScriptTypeSelectors();
+        this.initExtraScripts();
         this.initFileUploads();
+    }
+
+    /**
+     * Fill the language, keyboard, region and time zone selects from the data files
+     */
+    static initDataLists() {
+        const fill = (id, items, valueKey, emptyLabel) => {
+            const select = document.getElementById(id);
+            if (!select) return;
+            const current = select.value;
+            select.innerHTML = '';
+            if (emptyLabel !== undefined) {
+                const option = document.createElement('option');
+                option.value = '';
+                option.textContent = emptyLabel;
+                select.appendChild(option);
+            }
+            for (const item of items) {
+                const option = document.createElement('option');
+                option.value = String(item[valueKey]);
+                option.textContent = item.name;
+                select.appendChild(option);
+            }
+            if (Array.from(select.options).some(o => o.value === current)) select.value = current;
+        };
+        const byName = list => list.slice().sort((a, b) => a.name.localeCompare(b.name));
+        fill('language', LanguagesData.languages, 'code');
+        fill('languageSecondary', LanguagesData.languages, 'code', 'None');
+        fill('languageTertiary', LanguagesData.languages, 'code', 'None');
+        fill('keyboard', LanguagesData.keyboards, 'code');
+        fill('geoLocation', byName(CountriesData.countries), 'id', 'Derived from display language (default)');
+        fill('timezone', LanguagesData.timezones, 'id');
+    }
+
+    static SCRIPT_TYPES = [['', 'None'], ['cmd', '.cmd (Batch)'], ['ps1', '.ps1 (PowerShell)'], ['reg', '.reg (Registry)'], ['vbs', '.vbs (VBScript)'], ['js', '.js (JScript)']];
+
+    /**
+     * "Add another script" buttons: extra script boxes per phase, named <phase>ScriptType_N / <phase>Script_N
+     */
+    static initExtraScripts() {
+        document.querySelectorAll('.add-script').forEach(button => {
+            button.addEventListener('click', () => this.addScriptRow(button.dataset.phase));
+        });
+    }
+
+    static scriptRowCount(phase) {
+        return 1 + document.querySelectorAll(`#${phase}ExtraScripts .extra-script`).length;
+    }
+
+    static addScriptRow(phase) {
+        const container = document.getElementById(`${phase}ExtraScripts`);
+        if (!container) return null;
+        const index = this.scriptRowCount(phase) + 1;
+        const row = document.createElement('div');
+        row.className = 'extra-script script-phase';
+        row.dataset.index = index;
+        const select = document.createElement('select');
+        select.name = `${phase}ScriptType_${index}`;
+        select.id = select.name;
+        for (const [value, label] of this.SCRIPT_TYPES) {
+            const option = document.createElement('option');
+            option.value = value;
+            option.textContent = label;
+            select.appendChild(option);
+        }
+        select.value = 'ps1';
+        const textarea = document.createElement('textarea');
+        textarea.name = `${phase}Script_${index}`;
+        textarea.id = textarea.name;
+        textarea.rows = 8;
+        const remove = document.createElement('button');
+        remove.type = 'button';
+        remove.className = 'btn-small btn-danger';
+        remove.textContent = 'Remove';
+        remove.addEventListener('click', () => {
+            row.remove();
+            this.renumberScriptRows(phase);
+            document.getElementById('unattendForm').dispatchEvent(new Event('input', { bubbles: true }));
+        });
+
+        const head = document.createElement('div');
+        head.className = 'form-group';
+        const label = document.createElement('label');
+        label.textContent = `Script ${index} type `;
+        label.appendChild(select);
+        head.appendChild(label);
+        head.appendChild(remove);
+        const body = document.createElement('div');
+        body.className = 'form-group';
+        body.appendChild(textarea);
+        row.appendChild(head);
+        row.appendChild(body);
+        container.appendChild(row);
+
+        CodeEditor.enhance(textarea, select.value);
+        select.addEventListener('change', () => CodeEditor.setLanguage(textarea, select.value || 'ps1'));
+        return row;
+    }
+
+    static renumberScriptRows(phase) {
+        document.querySelectorAll(`#${phase}ExtraScripts .extra-script`).forEach((row, i) => {
+            const index = i + 2;
+            row.dataset.index = index;
+            const select = row.querySelector('select');
+            const textarea = row.querySelector('textarea');
+            select.name = select.id = `${phase}ScriptType_${index}`;
+            textarea.name = textarea.id = `${phase}Script_${index}`;
+            row.querySelector('label').firstChild.textContent = `Script ${index} type `;
+        });
+    }
+
+    /** Make sure a phase has at least `count` script boxes (used when importing). */
+    static ensureScriptRows(phase, count) {
+        while (this.scriptRowCount(phase) < count && count <= 50) this.addScriptRow(phase);
     }
 
     /**
@@ -342,12 +458,37 @@ class UIComponents {
             return;
         }
 
-        // Read file as base64
+        // Read file as base64; large images are downscaled, because the image is embedded in the
+        // answer file as a base64 string and setup has to carry it through the whole installation.
+        const MAX_EMBED = 1024 * 1024;
         const reader = new FileReader();
         reader.onload = (e) => {
-            // Store base64 data in a hidden field or data attribute
-            fileInput.dataset.base64 = e.target.result;
-            Utils.showNotification(`${type} image loaded successfully`, 'success');
+            const dataUrl = e.target.result;
+            if (file.size <= MAX_EMBED) {
+                fileInput.dataset.base64 = dataUrl;
+                fileInput.dispatchEvent(new Event('input', { bubbles: true }));
+                Utils.showNotification(`${type} image loaded (${Math.round(file.size / 1024)} KB)`, 'success');
+                return;
+            }
+            const img = new Image();
+            img.onload = () => {
+                const scale = Math.min(1, 2560 / img.width, 1600 / img.height);
+                const canvas = document.createElement('canvas');
+                canvas.width = Math.round(img.width * scale);
+                canvas.height = Math.round(img.height * scale);
+                canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+                let quality = 0.85;
+                let out = canvas.toDataURL('image/jpeg', quality);
+                while (out.length > MAX_EMBED * 1.37 && quality > 0.5) {
+                    quality -= 0.1;
+                    out = canvas.toDataURL('image/jpeg', quality);
+                }
+                fileInput.dataset.base64 = out;
+                fileInput.dispatchEvent(new Event('input', { bubbles: true }));
+                Utils.showNotification(`${type} image was ${Math.round(file.size / 1024)} KB; embedded as ${canvas.width}x${canvas.height} JPEG (${Math.round(out.length * 0.73 / 1024)} KB)`, 'info');
+            };
+            img.onerror = () => Utils.showNotification('Failed to decode image file', 'error');
+            img.src = dataUrl;
         };
         reader.onerror = () => {
             Utils.showNotification('Failed to read image file', 'error');

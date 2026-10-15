@@ -60,7 +60,7 @@ const out = process.argv[2] || join(root, 'test/smoke-output.xml');
 writeFileSync(out, xml);
 
 const files = [...xml.matchAll(/<File path="([^"]+)">/g)].map(m => m[1].split('\\').pop());
-const required = ['RemovePackages.ps1', 'RemoveCapabilities.ps1', 'RemoveFeatures.ps1', 'SetStartPins.ps1', 'LayoutModification.xml',
+const required = ['RemovePackage.ps1', 'RemoveCapability.ps1', 'RemoveFeature.ps1', 'SetStartPins.ps1', 'LayoutModification.xml',
     'SetWallpaper.ps1', 'Wifi.xml', 'unattend-01.cmd', 'unattend-02.reg', 'unattend-03.js', 'unattend-04.ps1',
     'Specialize.ps1', 'UserOnce.ps1', 'DefaultUser.ps1', 'FirstLogon.ps1'];
 const missing = required.filter(f => !files.includes(f));

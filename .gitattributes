@@ -1,0 +1,5 @@
+# Normalise line endings in the repository; check out with the platform default
+* text=auto
+
+# Reference answer files and scripts must keep their CRLF line endings byte for byte
+test/fixtures/** -text

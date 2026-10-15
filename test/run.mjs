@@ -17,7 +17,7 @@ globalThis.RemovalCatalog = require(join(root, 'js/removal-catalog.js'));
 globalThis.ConfigModel = require(join(root, 'js/config-model.js'));
 const XmlGenerator = require(join(root, 'js/xml-generator.js'));
 
-const fixture = readFileSync(join(root, 'test/fixtures/snoops-2024.xml'), 'utf8');
+const fixture = readFileSync(join(root, 'test/fixtures/snoops-2026.xml'), 'utf8');
 const firstLogonScript = readFileSync(join(root, 'test/fixtures/snoops-firstlogon.ps1'), 'utf8');
 
 const config = {
@@ -75,16 +75,24 @@ for (const key of [
 
 const generated = new XmlGenerator(config).generate();
 
-const strip = text => text.split('\r\n').filter(line => !line.startsWith('\t<!--')).join('\r\n');
+// Ignore the generator comment and schneegans' <Build> block (commit hash of their build);
+// compare on LF so a checkout that normalised the fixture's line endings still works.
+const strip = text => text.replace(/\r\n/g, '\n')
+    .replace(/\t\t<Build>[\s\S]*?<\/Build>\n/, '')
+    .split('\n').filter(line => !line.startsWith('\t<!--')).join('\n');
 const expected = strip(fixture);
 const actual = strip(generated);
 
+if (!generated.includes('\r\n')) {
+    console.log('FAIL: generated output must use CRLF line endings');
+    process.exit(1);
+}
 if (expected === actual) {
-    console.log(`OK: generated output matches test/fixtures/snoops-2024.xml (${actual.length} chars)`);
+    console.log(`OK: generated output matches test/fixtures/snoops-2026.xml (${actual.length} chars)`);
     process.exit(0);
 }
 
-const e = expected.split('\r\n'), a = actual.split('\r\n');
+const e = expected.split('\n'), a = actual.split('\n');
 let i = 0;
 while (i < e.length && i < a.length && e[i] === a[i]) i++;
 console.log(`MISMATCH at line ${i + 1} (expected ${e.length} lines, got ${a.length})`);

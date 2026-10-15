@@ -8,8 +8,8 @@ A comprehensive pure HTML/JavaScript web application for generating highly custo
 All tweaks are PowerShell blocks in four embedded scripts (`Specialize.ps1`, `DefaultUser.ps1`, `UserOnce.ps1`,
 `FirstLogon.ps1`) carried in an `<Extensions>` block and extracted to `C:\Windows\Setup\Scripts` during the
 specialize pass. Settings land in the default user hive, so every account gets them, and custom scripts are
-embedded as files instead of being squeezed into a 1,024-character `CommandLine`. A real schneegans.de file
-(`test/fixtures/snoops-2024.xml`) is reproduced byte for byte by `node test/run.mjs`.
+embedded as files instead of being squeezed into a 1,024-character `CommandLine`. A real schneegans.de file generated
+in October 2026 (`test/fixtures/snoops-2026.xml`) is reproduced byte for byte by `node test/run.mjs`.
 
 ### Core Features
 - **Pure Client-Side**: No server required, runs entirely in your browser
@@ -17,9 +17,9 @@ embedded as files instead of being squeezed into a 1,024-character `CommandLine`
 - **8 Organized Tabs**: Intuitive interface with tabbed navigation
 - **Multi-Architecture Support**: x86, amd64 (x64), and ARM64
 - **Live XML Preview**: See the generated XML in real-time with syntax highlighting
-- **Configuration Presets**: 5 pre-configured templates for common scenarios
-- **Import/Export**: Save and load configurations in JSON or **XML format** 🆕
-- **XML Import**: Import generated autounattend.xml files back into the generator 🆕
+- **Configuration Presets**: minimal, single user, VM guest, privacy, gaming
+- **Import/Export**: Save and load configurations in JSON or **XML format**, including files from schneegans.de (2024 and current format)
+- **Shareable Links**: "Copy link to this config" puts the whole configuration into the URL; the same link is written into the generated XML comment, so any file reopens in the generator
 - **XML Validation**: Built-in Python validator for Linux users 🆕
 - **Auto-Save**: Configuration automatically saved to localStorage
 - **No Dependencies**: Pure vanilla JavaScript, no frameworks needed
@@ -395,7 +395,8 @@ Special thanks to Christian Schneegans for creating the original comprehensive u
 node test/run.mjs
 ```
 
-The test feeds the options of a real schneegans.de answer file (generated April 2024, kept in
+The test feeds the options of a real schneegans.de answer file (generated October 2026, kept in
 `test/fixtures/`) into `XmlGenerator` and compares the result with that file line by line. Only the
-generator comment may differ. Importing the same file in the browser and regenerating it from the
+generator comment and schneegans' `<Build>` block may differ. `node test/smoke.mjs` switches every option on.
+Both run in GitHub Actions on every push. The April 2024 file is kept as an import test. Importing the same file in the browser and regenerating it from the
 form gives the same result.
