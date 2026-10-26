@@ -14,7 +14,7 @@
 				</ProductKey>
 				<AcceptEula>true</AcceptEula>
 			</UserData>
-			<UseConfigurationSet>false</UseConfigurationSet>
+			<UseConfigurationSet>true</UseConfigurationSet>
 		</component>
 	</settings>
 	<settings pass="generalize"></settings>
@@ -96,8 +96,8 @@
 	<Extensions xmlns="https://schneegans.de/windows/unattend-generator/">
 		<Build>
 			<Commit>
-				<Hash>27237f82e9a8498d9c5bab7d398dc34b7682a1e8</Hash>
-				<GitHubUrl>https://github.com/cschneegans/unattend-generator/commit/27237f82e9a8498d9c5bab7d398dc34b7682a1e8</GitHubUrl>
+				<Hash>82d4ffdd11ea3266f8f3b29d4fcd80f66bfdbaf6</Hash>
+				<GitHubUrl>https://github.com/cschneegans/unattend-generator/commit/82d4ffdd11ea3266f8f3b29d4fcd80f66bfdbaf6</GitHubUrl>
 			</Commit>
 		</Build>
 		<ExtractScript>
